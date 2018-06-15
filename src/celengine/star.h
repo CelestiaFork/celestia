@@ -120,7 +120,7 @@ class StarDetails
 
  public:
     static StarDetails* GetStarDetails(const StellarClass&);
-    static StarDetails* CreateStandardStarType(const std::string& _specType,
+    static StarDetails* CreateStandardStarType(const std::string& specTypeName,
                                                float _temperature,
                                                float _rotationPeriod);
 
@@ -310,7 +310,7 @@ Star::Star() :
     catalogNumber(InvalidCatalogNumber),
     position(0, 0, 0),
     absMag(4.83f),
-    details(NULL)
+    details(nullptr)
 {
 }
 
