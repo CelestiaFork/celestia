@@ -43,6 +43,11 @@
 #include <celutil/utf8.h>
 #include <celutil/util.h>
 
+#if 0
+#include <chrono>
+using namespace std::chrono;
+#endif
+
 using namespace cmod;
 using namespace Eigen;
 using namespace std;
@@ -602,10 +607,17 @@ static void renderRingSystem(float innerRadius,
                              float outerRadius,
                              float beginAngle,
                              float endAngle,
+#ifdef UseOpenGL
                              unsigned int nSections)
+#else
+                             unsigned int nSections, GLfloat vtx[], GLshort tex[])
+#endif
 {
+#if 0
+high_resolution_clock::time_point t1 = high_resolution_clock::now();
+#endif
     float angle = endAngle - beginAngle;
-
+#ifdef UseOpenGL
     glBegin(GL_QUAD_STRIP);
     for (unsigned int i = 0; i <= nSections; i++)
     {
@@ -619,6 +631,43 @@ static void renderRingSystem(float innerRadius,
         glVertex3f(c * outerRadius, 0, s * outerRadius);
     }
     glEnd();
+#else
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    for (unsigned i = 0, j = 0, k = 0; i <= nSections; i++)
+    {
+        float t = (float) i / (float) nSections;
+        float theta = beginAngle + t * angle;
+        float s = (float) sin(theta);
+        float c = (float) cos(theta);
+
+        vtx[j]   = c * innerRadius; vtx[j+2] = s * innerRadius;
+        vtx[j+3] = c * outerRadius; vtx[j+5] = s * outerRadius;
+        j += 6;
+
+        if (i & 1)
+        {
+            tex[k+2] = 1;
+            k += 4;
+        }
+        else
+        {
+            k++; tex[k++] = 1; tex[k++] = 1; tex[k++] = 1;
+        }
+    }
+    glVertexPointer(3, GL_FLOAT, 0, vtx);
+    glTexCoordPointer(2, GL_SHORT, 0, tex);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, (nSections+1)*2);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
+#if 0
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto duration = duration_cast<nanoseconds>( t2 - t1 ).count();
+    cout << duration << '\n';
+#endif
 }
 
 
@@ -735,8 +784,22 @@ void renderRings_GLSL(RingSystem& rings,
     else
         glDisable(GL_TEXTURE_2D);
 
+#ifdef UseOpenGL
     renderRingSystem(inner, outer, 0, (float) PI * 2.0f, nSections);
     renderRingSystem(inner, outer, (float) PI * 2.0f, 0, nSections);
+#else
+    unsigned nVtx = (nSections+1)*2;
+    auto vtx = new GLfloat[nVtx * 3];
+    auto tex = new GLshort[nVtx * 2];
+    memset(vtx, 0, nVtx * 3 * sizeof(vtx[0]));
+    memset(tex, 0, nVtx * 2 * sizeof(tex[0]));
+
+    renderRingSystem(inner, outer, 0, (float) PI * 2.0f, nSections, vtx, tex);
+    renderRingSystem(inner, outer, (float) PI * 2.0f, 0, nSections, vtx, tex);
+
+    delete[] vtx;
+    delete[] tex;
+#endif
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 

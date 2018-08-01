@@ -558,7 +558,11 @@ SkyGrid::render(Renderer& renderer,
     Quaterniond q = xrot90 * m_orientation * xrot90.conjugate();
     Quaternionf orientationf = q.cast<float>();
 
+#ifdef UseOpenGL
     glColor(m_lineColor);
+#else
+    glColor4f(m_lineColor.red(), m_lineColor.green(), m_lineColor.blue(), m_lineColor.alpha());
+#endif
 
     // Render the parallels
     glPushMatrix();
@@ -567,7 +571,10 @@ SkyGrid::render(Renderer& renderer,
     // Radius of sphere is arbitrary, with the constraint that it shouldn't
     // intersect the near or far plane of the view frustum.
     glScalef(1000.0f, 1000.0f, 1000.0f);
-
+#ifndef UseOpenGL
+    glEnableClientState(GL_VERTEX_ARRAY);
+    auto vtx1 = new GLfloat[ARC_SUBDIVISIONS + 1][3];
+#endif
     double arcStep = (maxTheta - minTheta) / (double) ARC_SUBDIVISIONS;
     double theta0 = minTheta;
     for (int dec = startDec; dec <= endDec; dec += decIncrement)
@@ -576,6 +583,7 @@ SkyGrid::render(Renderer& renderer,
         double cosPhi = cos(phi);
         double sinPhi = sin(phi);
 
+#ifdef UseOpenGL
         glBegin(GL_LINE_STRIP);
         for (int j = 0; j <= ARC_SUBDIVISIONS; j++)
         {
@@ -586,6 +594,20 @@ SkyGrid::render(Renderer& renderer,
             glVertex3f(x, z, -y);  // convert to Celestia coords
         }
         glEnd();
+#else
+        for (int j = 0; j <= ARC_SUBDIVISIONS; j++)
+        {
+            double theta = theta0 + j * arcStep;
+            float x = (float) (cosPhi * std::cos(theta));
+            float y = (float) (cosPhi * std::sin(theta));
+            float z = (float) sinPhi;
+            vtx1[j][0] = x;
+            vtx1[j][1] = z;
+            vtx1[j][2] = -y;  // convert to Celestia coords
+        }
+        glVertexPointer(3, GL_FLOAT, 0, vtx1);
+        glDrawArrays(GL_LINE_STRIP, 0, ARC_SUBDIVISIONS + 1);
+#endif
 
         // Place labels at the intersections of the view frustum planes
         // and the parallels.
@@ -652,6 +674,7 @@ SkyGrid::render(Renderer& renderer,
         double cosTheta = cos(theta);
         double sinTheta = sin(theta);
 
+#ifdef UseOpenGL
         glBegin(GL_LINE_STRIP);
         for (int j = 0; j <= ARC_SUBDIVISIONS; j++)
         {
@@ -662,6 +685,20 @@ SkyGrid::render(Renderer& renderer,
             glVertex3f(x, z, -y);  // convert to Celestia coords
         }
         glEnd();
+#else
+        for (int j = 0; j <= ARC_SUBDIVISIONS; j++)
+        {
+            double phi = phi0 + j * arcStep;
+            float x = (float) (cos(phi) * cosTheta);
+            float y = (float) (cos(phi) * sinTheta);
+            float z = (float) sin(phi);
+            vtx1[j][0] = x;
+            vtx1[j][1] = z;
+            vtx1[j][2] = -y;  // convert to Celestia coords
+        }
+        glVertexPointer(3, GL_FLOAT, 0, vtx1);
+        glDrawArrays(GL_LINE_STRIP, 0, ARC_SUBDIVISIONS + 1);
+#endif
 
         // Place labels at the intersections of the view frustum planes
         // and the meridians.
@@ -710,6 +747,7 @@ SkyGrid::render(Renderer& renderer,
         }
     }
 
+#ifdef UseOpenGL
     // Draw crosses indicating the north and south poles
     glBegin(GL_LINES);
     glVertex3f(-polarCrossSize, 1.0f,  0.0f);
@@ -721,6 +759,23 @@ SkyGrid::render(Renderer& renderer,
     glVertex3f(0.0f, -1.0f, -polarCrossSize);
     glVertex3f(0.0f, -1.0f,  polarCrossSize);
     glEnd();
+#else
+    GLfloat vtx2[] = {
+        -polarCrossSize, 1.0f,  0.0f,
+         polarCrossSize, 1.0f,  0.0f,
+        0.0f, 1.0f, -polarCrossSize,
+        0.0f, 1.0f,  polarCrossSize,
+        -polarCrossSize, -1.0f,  0.0f,
+         polarCrossSize, -1.0f,  0.0f,
+        0.0f, -1.0f, -polarCrossSize,
+        0.0f, -1.0f,  polarCrossSize
+    };
+    glVertexPointer(3, GL_FLOAT, 0, vtx2);
+    glDrawArrays(GL_LINES, 0, 8);
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+    delete[] vtx1;
+#endif
 
     glPopMatrix();
 }

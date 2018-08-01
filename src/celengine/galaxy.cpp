@@ -371,7 +371,13 @@ void Galaxy::renderGalaxyPointSprites(const GLContext&,
     float btot = ((type > SBc) && (type < Irr))? 2.5f: 5.0f;
     const float spriteScaleFactor = 1.0f / 1.55f;
 
+//#ifdef UseOpenGL
+#if 1
     glBegin(GL_QUADS);
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
     for (unsigned int i = 0; i < nPoints; ++i)
     {
         if ((i & pow2) != 0)
@@ -389,21 +395,49 @@ void Galaxy::renderGalaxyPointSprites(const GLContext&,
         const Blob& b  = (*points)[i];
         Vector4f    p  = m * b.position;
         float       br = b.brightness / 255.0f;
-
-        Vector3f   c      = colorTable[b.colorIndex];     // lookup static color table
+        Vector3f    c  = colorTable[b.colorIndex];     // lookup static color table
 
         float screenFrac = size / p.norm();
         if (screenFrac < 0.1f)
         {
             float a  = btot * (0.1f - screenFrac) * brightness_corr * brightness * br;
             glColor4f(c.x(), c.y(), c.z(), (4.0f * lightGain + 1.0f) * a);
+//#ifdef UseOpenGL
+#if 1
             glTexCoord2f(0, 0);          glVertex4(p + v0);
             glTexCoord2f(1, 0);          glVertex4(p + v1);
             glTexCoord2f(1, 1);          glVertex4(p + v2);
             glTexCoord2f(0, 1);          glVertex4(p + v3);
+#else
+            auto pv0 = p + v0;
+            auto pv1 = p + v1;
+            auto pv2 = p + v2;
+            auto pv3 = p + v3;
+            GLfloat vtx1[] = {
+                pv0[0], pv0[1], pv0[2], pv0[3],
+                pv1[0], pv1[1], pv1[2], pv1[3],
+                pv2[0], pv2[1], pv2[2], pv2[3],
+                pv3[0], pv3[1], pv3[2], pv3[3]
+            };
+            static GLfloat tex1[] = {
+                0, 0,
+                1, 0,
+                1, 1,
+                0, 1
+            };
+            glVertexPointer(4, GL_FLOAT, 0, vtx1);
+            glTexCoordPointer(2, GL_FLOAT, 0, tex1);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+#endif
         }
     }
+//#ifdef UseOpenGL
+#if 1
     glEnd();
+#else
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
     glPopMatrix();
 }

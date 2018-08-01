@@ -218,19 +218,39 @@ VisibleRegion::render(Renderer* /* renderer */,
     double ee = e_.squaredNorm();
 
     glColor4f(m_color.red(), m_color.green(), m_color.blue(), opacity);
+#ifdef UseOpenGL
     glBegin(GL_LINE_LOOP);
-
-    for (unsigned i = 0; i < nSections; i++)
+#else
+    auto vtx = new GLfloat[3*nSections];
+#endif
+    for (unsigned i = 0, j = 0; i < nSections; i++, j += 3)
     {
         double theta = (double) i / (double) (nSections) * 2.0 * PI;
         Vector3d w = cos(theta) * uAxis + sin(theta) * vAxis;
 
         Vector3d toCenter = ellipsoidTangent(recipSemiAxes, w, e, e_, ee);
         toCenter *= maxSemiAxis * scale;
+#ifdef UseOpenGL
         glVertex3dv(toCenter.data());
+#else
+	auto data = toCenter.cast<float>();
+        vtx[j+0] = data[0];
+        vtx[j+1] = data[1];
+        vtx[j+2] = data[2];
+
+//        memcpy(&vtx[j], Vector3f(toCenter.cast<float>()).data(), 3*sizeof(GLfloat));
+#endif
     }
 
+#ifdef UseOpenGL
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, vtx);
+    glDrawArrays(GL_LINE_LOOP, 0, nSections);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    delete[] vtx;
+#endif
 
     glPopMatrix();
 
