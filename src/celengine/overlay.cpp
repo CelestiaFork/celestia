@@ -197,6 +197,7 @@ void Overlay::rect(float x, float y, float w, float h, bool fill)
         useTexture = false;
     }
 
+#ifdef OpenGL
     if (fill)
     {
         glRectf(x, y, x + w, y + h);
@@ -210,6 +211,18 @@ void Overlay::rect(float x, float y, float w, float h, bool fill)
         glVertex3f(x, y + h, 0);
         glEnd();
     }
+#else
+    GLfloat vtx[] = {
+        x,     y,
+        x + w, y,
+        x + w, y + h,
+        x,     y + h,
+    };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, vtx);
+    glDrawArrays(fill ? GL_TRIANGLE_FAN : GL_LINE_STRIP, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 }
 
 
