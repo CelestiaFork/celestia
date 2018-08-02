@@ -418,7 +418,7 @@ void Globular::renderGlobularPointSprites(const GLContext&,
 
     glColor4f(Rr, Gg, Bb, min(br * pixelWeight, 1.0f));
 
-#ifdef OpenGL
+#ifdef UseOpenGL
     glBegin(GL_QUADS);
 
     glTexCoord2f(0, 0);          glVertex(v0 * tidalSize);
@@ -469,7 +469,7 @@ void Globular::renderGlobularPointSprites(const GLContext&,
     float clipDistance = 100.0f; // observer distance [ly] from globular, where we
                                  // start "morphing" the star-sprite sizes towards
                                  // their physical values
-#ifdef OpenGL
+#ifdef UseOpenGL
     glBegin(GL_QUADS);
 #else
 //    glEnableClientState(GL_VERTEX_ARRAY);
@@ -521,7 +521,7 @@ void Globular::renderGlobularPointSprites(const GLContext&,
         glColor4f(col.red(), col.green(), col.blue(),
                   min(br * (1.0f - pixelWeight * relStarDensity(eta_2d)), 1.0f));
 
-#ifdef OpenGL
+#ifdef UseOpenGL
         glTexCoord2f(0, 0);          glVertex(p + (v0 * starSize));
         glTexCoord2f(1, 0);          glVertex(p + (v1 * starSize));
         glTexCoord2f(1, 1);          glVertex(p + (v2 * starSize));
@@ -546,7 +546,7 @@ void Globular::renderGlobularPointSprites(const GLContext&,
 
         starSize = saveSize;
     }
-#ifdef OpenGL
+#ifdef UseOpenGL
     glEnd();
 #else
     glDisableClientState(GL_VERTEX_ARRAY);

@@ -61,7 +61,7 @@ void TextureFont::render(wchar_t ch) const
     if (glyph == NULL) glyph = getGlyph((wchar_t)'?');
     if (glyph != NULL)
     {
-#ifdef OpenGL
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         glTexCoord2f(glyph->texCoords[0].u, glyph->texCoords[0].v);
         glVertex2f(glyph->xoff, glyph->yoff);
@@ -110,7 +110,7 @@ void TextureFont::render(wchar_t ch, float xoffset, float yoffset) const
     if (glyph == NULL) glyph = getGlyph((wchar_t)'?');
     if (glyph != NULL)
     {
-#ifdef OpenGL
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         glTexCoord2f(glyph->texCoords[0].u, glyph->texCoords[0].v);
         glVertex2f(glyph->xoff + xoffset, glyph->yoff + yoffset);

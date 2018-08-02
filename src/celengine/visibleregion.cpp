@@ -218,7 +218,7 @@ VisibleRegion::render(Renderer* /* renderer */,
     double ee = e_.squaredNorm();
 
     glColor4f(m_color.red(), m_color.green(), m_color.blue(), opacity);
-#ifdef OpenGL
+#ifdef UseOpenGL
     glBegin(GL_LINE_LOOP);
 #else
     auto vtx = new GLfloat[3*nSections];
@@ -231,14 +231,14 @@ VisibleRegion::render(Renderer* /* renderer */,
 
         Vector3d toCenter = ellipsoidTangent(recipSemiAxes, w, e, e_, ee);
         toCenter *= maxSemiAxis * scale;
-#ifdef OpenGL
+#ifdef UseOpenGL
         glVertex3dv(toCenter.data());
 #else
         memcpy((void*) &vtx[i], (const void*) toCenter.data(), 3*sizeof(GLfloat));
 #endif
     }
 
-#ifdef OpenGL
+#ifdef UseOpenGL
     glEnd();
 #else
     glEnableClientState(GL_VERTEX_ARRAY);

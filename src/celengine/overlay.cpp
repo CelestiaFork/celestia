@@ -197,7 +197,7 @@ void Overlay::rect(float x, float y, float w, float h, bool fill)
         useTexture = false;
     }
 
-#ifdef OpenGL
+#ifdef UseOpenGL
     if (fill)
     {
         glRectf(x, y, x + w, y + h);
