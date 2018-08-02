@@ -25,7 +25,7 @@ ConstellationBoundaries::ConstellationBoundaries() :
     currentChain(NULL)
 {
     currentChain = new Chain();
-    currentChain->insert(currentChain->end(), Vector3f::Zero());
+    currentChain->v.push_back(Vector3f::Zero());
 }
 
 ConstellationBoundaries::~ConstellationBoundaries()
@@ -49,63 +49,52 @@ void ConstellationBoundaries::moveto(float ra, float dec)
     {
         chains.insert(chains.end(), currentChain);
         currentChain = new Chain();
-        currentChain->insert(currentChain->end(), v);
+        currentChain->v.push_back(v);
     }
     else
     {
-        (*currentChain)[0] = v;
+        currentChain->v[0] = v;
     }
 }
 
 
 void ConstellationBoundaries::lineto(float ra, float dec)
 {
-    currentChain->push_back(astro::equatorialToEclipticCartesian(ra, dec, BoundariesDrawDistance));
+    currentChain->v.push_back(astro::equatorialToEclipticCartesian(ra, dec, BoundariesDrawDistance));
 }
 
 
 void ConstellationBoundaries::render()
 {
-#ifndef OpenGL
+#ifndef UseOpenGL
     glEnableClientState(GL_VERTEX_ARRAY);
-    size_t old_chain_size = 512;
-    GLfloat* data = new GLfloat[old_chain_size * 3];
 #endif
 
-    for (vector<Chain*>::iterator iter = chains.begin();
-         iter != chains.end(); iter++)
+    for (const auto& chain : chains)
     {
-        Chain* chain = *iter;
-#ifdef OpenGL
+#ifdef UseOpenGL
         glBegin(GL_LINE_STRIP);
-        for (Chain::iterator citer = chain->begin(); citer != chain->end();
-             citer++)
+        for (const auto& vertex: chain->v)
         {
-            glVertex3fv(citer->data());
+            glVertex3fv(vertex.data());
         }
         glEnd();
 #else
-        // TODO: futher optimize memory allocation
-        size_t n = chain->size();
-        if (n > old_chain_size)
+        size_t chain_size = chain->size();
+        if (!chain->vtx)
         {
-            delete[] data;
-            old_chain_size = (1 + (n / 512)) * 512;
-            data = new GLfloat[old_chain_size * 3];
+            chain->vtx = new GLfloat[chain_size * 3];
+            for (size_t i = 0, j = 0; i < chain_size; i++, j+=3)
+            {
+                memcpy(&(chain->vtx[j]), chain->v[i].data(), 3*sizeof(GLfloat));
+            }
         }
-        size_t i = 0;
-        for (const auto& v : *chain)
-        {
-            memcpy((void*) &data[i], (const void*) v.data(), 3*sizeof(GLfloat));
-            i += 3;
-        }
-        glVertexPointer(3, GL_FLOAT, 0, data);
-        glDrawArrays(GL_LINE_STRIP, 0, n);
+        glVertexPointer(3, GL_FLOAT, 0, chain->vtx);
+        glDrawArrays(GL_LINE_STRIP, 0, chain_size);
 #endif
     }
-#ifndef OpenGL
+#ifndef UseOpenGL
     glDisableClientState(GL_VERTEX_ARRAY);
-    delete[] data;
 #endif
 }
 

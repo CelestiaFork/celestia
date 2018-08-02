@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <GL/glew.h>
+
 
 class ConstellationBoundaries
 {
@@ -22,7 +24,15 @@ class ConstellationBoundaries
     ConstellationBoundaries();
     ~ConstellationBoundaries();
 
-    typedef std::vector<Eigen::Vector3f> Chain;
+    class Chain
+    {
+     public:
+        ~Chain() { delete[] vtx; }
+        size_t size() const { return v.size(); }
+
+        std::vector<Eigen::Vector3f> v;
+        GLfloat* vtx{ nullptr };
+    };
 
     void moveto(float ra, float dec);
     void lineto(float ra, float dec);
