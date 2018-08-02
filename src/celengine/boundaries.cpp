@@ -66,10 +66,17 @@ void ConstellationBoundaries::lineto(float ra, float dec)
 
 void ConstellationBoundaries::render()
 {
+#ifndef OpenGL
+    glEnableClientState(GL_VERTEX_ARRAY);
+    GLfloat* data = nullptr;
+    size_t old_chain_size = 0;
+#endif
+
     for (vector<Chain*>::iterator iter = chains.begin();
          iter != chains.end(); iter++)
     {
         Chain* chain = *iter;
+#ifdef OpenGL
         glBegin(GL_LINE_STRIP);
         for (Chain::iterator citer = chain->begin(); citer != chain->end();
              citer++)
@@ -77,7 +84,29 @@ void ConstellationBoundaries::render()
             glVertex3fv(citer->data());
         }
         glEnd();
+#else
+        // TODO: futher optimize memory allocation
+        size_t n = chain->size();
+        if (n > old_chain_size)
+        {
+            delete[] data;
+            data = new GLfloat[n*3];
+            old_chain_size = n;
+        }
+        size_t i = 0;
+        for (const auto& v : *chain)
+        {
+            memcpy((void*) &data[i], (const void*) v.data(), 3*sizeof(GLfloat));
+            i += 3;
+        }
+        glVertexPointer(3, GL_FLOAT, 0, data);
+        glDrawArrays(GL_LINE_STRIP, 0, n);
+#endif
     }
+#ifndef OpenGL
+    glDisableClientState(GL_VERTEX_ARRAY);
+    delete[] data;
+#endif
 }
 
 
