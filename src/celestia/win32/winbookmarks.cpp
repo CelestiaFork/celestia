@@ -392,7 +392,7 @@ void AddNewBookmarkFolderInTree(HWND hTree, CelestiaCore* appCore, char* folderN
         folderFav->name = folderName;
 
         FavoritesList* favorites = appCore->getFavorites();
-        favorites->insert(favorites->end(), folderFav);
+        favorites->push_back(folderFav);
 
         tvis.hParent = hParent;
         tvis.hInsertAfter = hInsertAfter;

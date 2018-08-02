@@ -194,7 +194,7 @@ FindStars(const StarDatabase& stardb, Pred pred, int nStars)
     for (StarSet::const_iterator iter = firstStars.begin();
          iter != firstStars.end(); iter++)
     {
-        finalStars->insert(finalStars->end(), *iter);
+        finalStars->push_back(*iter);
     }
 
     return finalStars;

@@ -2947,7 +2947,7 @@ vector<DEVMODE>* EnumerateDisplayModes(unsigned int minBPP)
     while (EnumDisplaySettings(NULL, i, &dm))
     {
         if (dm.dmBitsPerPel >= minBPP)
-            modes->insert(modes->end(), dm);
+            modes->push_back(dm);
         i++;
     }
     sort(modes->begin(), modes->end());
@@ -4354,7 +4354,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd,
                     }
                     else
                     {
-                        ifstream scriptfile(urlString.c_str());
+                        ifstream scriptfile(urlString);
                         if (!scriptfile.good())
                         {
                             appCore->flash(_("Error opening script"));
