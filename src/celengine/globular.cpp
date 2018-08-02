@@ -30,6 +30,8 @@
 #include <cassert>
 #include "eigenport.h"
 
+#define UseOpenGL
+
 using namespace Eigen;
 using namespace std;
 

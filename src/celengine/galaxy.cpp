@@ -25,6 +25,8 @@
 #include <cstdio>
 #include <cassert>
 
+#define UseOpenGL
+
 using namespace Eigen;
 using namespace std;
 
