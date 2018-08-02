@@ -68,8 +68,8 @@ void ConstellationBoundaries::render()
 {
 #ifndef OpenGL
     glEnableClientState(GL_VERTEX_ARRAY);
-    GLfloat* data = nullptr;
-    size_t old_chain_size = 0;
+    size_t old_chain_size = 512;
+    GLfloat* data = new GLfloat[old_chain_size * 3];
 #endif
 
     for (vector<Chain*>::iterator iter = chains.begin();
@@ -90,8 +90,8 @@ void ConstellationBoundaries::render()
         if (n > old_chain_size)
         {
             delete[] data;
-            data = new GLfloat[n*3];
-            old_chain_size = n;
+            old_chain_size = (1 + (n / 512)) * 512;
+            data = new GLfloat[old_chain_size * 3];
         }
         size_t i = 0;
         for (const auto& v : *chain)
