@@ -218,7 +218,11 @@ VisibleRegion::render(Renderer* /* renderer */,
     double ee = e_.squaredNorm();
 
     glColor4f(m_color.red(), m_color.green(), m_color.blue(), opacity);
+#ifdef OpenGL
     glBegin(GL_LINE_LOOP);
+#else
+    auto vtx = new GLfloat[3*nSections];
+#endif
 
     for (unsigned i = 0; i < nSections; i++)
     {
@@ -227,10 +231,22 @@ VisibleRegion::render(Renderer* /* renderer */,
 
         Vector3d toCenter = ellipsoidTangent(recipSemiAxes, w, e, e_, ee);
         toCenter *= maxSemiAxis * scale;
+#ifdef OpenGL
         glVertex3dv(toCenter.data());
+#else
+        memcpy((void*) &vtx[i], (const void*) toCenter.data(), 3*sizeof(GLfloat));
+#endif
     }
 
+#ifdef OpenGL
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, vtx);
+    glDrawArrays(GL_LINE_STRIP, 0, nSections);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    delete[] vtx;
+#endif
 
     glPopMatrix();
 
