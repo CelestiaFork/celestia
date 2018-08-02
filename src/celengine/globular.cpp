@@ -418,6 +418,7 @@ void Globular::renderGlobularPointSprites(const GLContext&,
 
     glColor4f(Rr, Gg, Bb, min(br * pixelWeight, 1.0f));
 
+#ifdef OpenGL
     glBegin(GL_QUADS);
 
     glTexCoord2f(0, 0);          glVertex(v0 * tidalSize);
@@ -426,6 +427,30 @@ void Globular::renderGlobularPointSprites(const GLContext&,
     glTexCoord2f(0, 1);          glVertex(v3 * tidalSize);
 
     glEnd();
+#else
+    // TODO: optimize
+    GLfloat vtx1[] = {
+        tidalSize * v0.x, tidalSize * v0.y, tidalSize * v0.z,
+        tidalSize * v1.x, tidalSize * v1.y, tidalSize * v1.z,
+        tidalSize * v2.x, tidalSize * v2.y, tidalSize * v2.z,
+        tidalSize * v3.x, tidalSize * v3.y, tidalSize * v3.z
+    };
+    GLfloat tex1[] = {
+        0, 0,
+        1, 0,
+        1, 1,
+        0, 1
+    };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+    glTexCoordPointer(2, GL_FLOAT, 0, tex1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+//    glDisableClientState(GL_VERTEX_ARRAY);
+//    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
     /*! Next, render globular cluster via distinct "star" sprites (globularTex)
      * for sufficiently large resolution and distance from center of globular.
@@ -444,7 +469,12 @@ void Globular::renderGlobularPointSprites(const GLContext&,
     float clipDistance = 100.0f; // observer distance [ly] from globular, where we
                                  // start "morphing" the star-sprite sizes towards
                                  // their physical values
+#ifdef OpenGL
     glBegin(GL_QUADS);
+#else
+//    glEnableClientState(GL_VERTEX_ARRAY);
+//    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
     for (unsigned int i = 0; i < nPoints; ++i)
     {
@@ -491,14 +521,37 @@ void Globular::renderGlobularPointSprites(const GLContext&,
         glColor4f(col.red(), col.green(), col.blue(),
                   min(br * (1.0f - pixelWeight * relStarDensity(eta_2d)), 1.0f));
 
+#ifdef OpenGL
         glTexCoord2f(0, 0);          glVertex(p + (v0 * starSize));
         glTexCoord2f(1, 0);          glVertex(p + (v1 * starSize));
         glTexCoord2f(1, 1);          glVertex(p + (v2 * starSize));
         glTexCoord2f(0, 1);          glVertex(p + (v3 * starSize));
+#else
+        // XXX: too slow. check color rendering
+        auto t0 = p + (v0 * starSize);
+        auto t1 = p + (v1 * starSize);
+        auto t2 = p + (v2 * starSize);
+        auto t3 = p + (v3 * starSize);
+        for (size_t i = 0; i < 3; i++)
+        {
+            vtx1[i]   = t0[i];
+            vtx1[i+3] = t1[i];
+            vtx1[i+6] = t2[i];
+            vtx1[i+9] = t3[i];
+        }
+        glVertexPointer(3, GL_FLOAT, 0, vtx1);
+        glTexCoordPointer(2, GL_FLOAT, 0, tex1);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+#endif
 
         starSize = saveSize;
     }
+#ifdef OpenGL
     glEnd();
+#else
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 }
 
 unsigned int Globular::getRenderMask() const
