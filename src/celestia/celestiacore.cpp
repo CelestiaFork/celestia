@@ -3417,12 +3417,25 @@ static void displaySelectionName(Overlay& overlay,
 
 static void showViewFrame(const View* v, int width, int height)
 {
+#ifdef UseOpenGL
     glBegin(GL_LINE_LOOP);
     glVertex3f(v->x * width, v->y * height, 0.0f);
     glVertex3f(v->x * width, (v->y + v->height) * height - 1, 0.0f);
     glVertex3f((v->x + v->width) * width - 1, (v->y + v->height) * height - 1, 0.0f);
     glVertex3f((v->x + v->width) * width - 1, v->y * height, 0.0f);
     glEnd();
+#else
+    GLfloat vtx1[] = {
+        v->x * width,                  v->y * height,                   0.0f,
+        v->x * width,                  (v->y + v->height) * height - 1, 0.0f,
+        (v->x + v->width) * width - 1, (v->y + v->height) * height - 1, 0.0f,
+        (v->x + v->width) * width - 1, v->y * height,                   0.0f
+    };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 }
 
 
@@ -3489,6 +3502,7 @@ void CelestiaCore::renderOverlay()
 
         scriptImage->bind();
 
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         glColor4f(1.0f, 1.0f, 1.0f, imageAlpha);
         glTexCoord2f(0.0f, 1.0f);
@@ -3502,6 +3516,29 @@ void CelestiaCore::renderOverlay()
         glTexCoord2f(0.0f, 0.0f);
         glVertex2i(int (left), int (bottom) + int (ySize));
         glEnd();
+#else
+        GLfloat vtx1[] = {
+            left,         bottom,
+            left + xSize, bottom,
+            left + xSize, bottom + ySize,
+            left,         bottom + ySize
+        };
+
+        GLfloat tex1[] = {
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, 0.0f,
+            0.0f, 0.0f
+        };
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glColor4f(1.0f, 1.0f, 1.0f, imageAlpha);
+        glVertexPointer(2, GL_FLOAT, 0, vtx1);
+        glTexCoordPointer(2, GL_FLOAT, 0, tex1);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
              }
     }
 //SCRIPT IMAGE END
@@ -4079,6 +4116,7 @@ void CelestiaCore::renderOverlay()
             }
 
             logoTexture->bind();
+#ifdef UseOpenGL
             glBegin(GL_QUADS);
             glColor4f(0.8f, 0.8f, 1.0f, botAlpha);
             //glColor4f(1.0f, 1.0f, 1.0f, botAlpha);
@@ -4093,6 +4131,39 @@ void CelestiaCore::renderOverlay()
             glTexCoord2f(0.0f, 0.0f);
             glVertex2i(left, bottom + ySize);
             glEnd();
+#else
+            GLint vtx1[] = {
+                left,         bottom,
+                left + xSize, bottom,
+                left + xSize, bottom + ySize,
+                left,         bottom + ySize
+            };
+
+            GLfloat tex1[] = {
+                0.0f, 1.0f,
+                1.0f, 1.0f,
+                1.0f, 0.0f,
+                0.0f, 0.0f
+            };
+
+            GLfloat col1[] = {
+                0.8f, 0.8f, 1.0f, botAlpha,
+                0.8f, 0.8f, 1.0f, botAlpha,
+                0.6f, 0.6f, 1.0f, topAlpha,
+                0.6f, 0.6f, 1.0f, topAlpha
+            };
+
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glEnableClientState(GL_COLOR_ARRAY);
+
+            glVertexPointer(2, GL_INT, 0, vtx1);
+            glTexCoordPointer(2, GL_FLOAT, 0, tex1);
+            glColorPointer(4, GL_FLOAT, 0, col1);
+            glDrawArrays(GL_TRIANGLE_FAN,0,4);
+
+            glDisableClientState(GL_COLOR_ARRAY);
+            glDisableClientState(GL_VERTEX_ARRAY);
+#endif
         }
         else
         {
