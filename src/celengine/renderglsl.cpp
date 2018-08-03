@@ -605,7 +605,8 @@ static void renderRingSystem(float innerRadius,
                              unsigned int nSections)
 {
     float angle = endAngle - beginAngle;
-
+#define UseOpenGL
+#ifdef UseOpenGL
     glBegin(GL_QUAD_STRIP);
     for (unsigned int i = 0; i <= nSections; i++)
     {
@@ -619,6 +620,48 @@ static void renderRingSystem(float innerRadius,
         glVertex3f(c * outerRadius, 0, s * outerRadius);
     }
     glEnd();
+#else
+    assert(nSections % 10 == 0);
+/*
+https://pandorawiki.org/Porting_to_GLES_from_GL
+https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
+https://gamedev.stackexchange.com/questions/10727/fastest-way-to-draw-quads-in-opengl-es
+http://www.songho.ca/opengl/gl_vertexarray.html
+https://www.khronos.org/opengl/wiki/Talk:FAQ
+http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-9-vbo-indexing/
+https://www.reddit.com/r/gamedev/comments/1hfqg0/looking_for_tips_opengles_11_text_rendering/
+https://github.com/emileb/jwzgles/blob/master/jwzgles.c
+*/
+
+
+    GLfloat vtx1[nSections * 3 * 2 / 10 ];
+    GLfloat tex1[nSections * 2 * 2 / 10 ];
+    for (unsigned int i = 0, j = 0, k = 0; i <= nSections; i++)
+    {
+        float t = (float) i / (float) nSections;
+        float theta = beginAngle + t * angle;
+        float s = (float) sin(theta);
+        float c = (float) cos(theta);
+
+        vtx1[j++] = c * innerRadius;
+        vtx1[j++] = 0;
+        vtx1[j++] = s * innerRadius;
+        vtx1[j++] = c * outerRadius;
+        vtx1[j++] = 0;
+        vtx1[j++] = s * outerRadius;
+
+        tex1[k++] = 0.0f;
+        tex1[k++] = 0.5f;
+        tex1[k++] = 1.0f;
+        tex1[k++] = 0.5f;
+
+    }
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+    glTexCoordPointer(2, GL_FLOAT, 0, tex1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, nSections * 2);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 }
 
 
