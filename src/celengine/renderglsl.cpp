@@ -605,8 +605,8 @@ static void renderRingSystem(float innerRadius,
                              unsigned int nSections)
 {
     float angle = endAngle - beginAngle;
-#define UseOpenGL
-#ifdef UseOpenGL
+//#ifdef UseOpenGL
+#if 1
     glBegin(GL_QUAD_STRIP);
     for (unsigned int i = 0; i <= nSections; i++)
     {

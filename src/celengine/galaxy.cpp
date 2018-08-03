@@ -25,8 +25,6 @@
 #include <cstdio>
 #include <cassert>
 
-#define UseOpenGL
-
 using namespace Eigen;
 using namespace std;
 
@@ -373,7 +371,8 @@ void Galaxy::renderGalaxyPointSprites(const GLContext&,
     float btot = ((type > SBc) && (type < Irr))? 2.5f: 5.0f;
     const float spriteScaleFactor = 1.0f / 1.55f;
 
-#ifdef UseOpenGL
+//#ifdef UseOpenGL
+#if 1
     glBegin(GL_QUADS);
 #else
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -403,7 +402,8 @@ void Galaxy::renderGalaxyPointSprites(const GLContext&,
         {
             float a  = btot * (0.1f - screenFrac) * brightness_corr * brightness * br;
             glColor4f(c.x(), c.y(), c.z(), (4.0f * lightGain + 1.0f) * a);
-#ifdef UseOpenGL
+//#ifdef UseOpenGL
+#if 1
             glTexCoord2f(0, 0);          glVertex4(p + v0);
             glTexCoord2f(1, 0);          glVertex4(p + v1);
             glTexCoord2f(1, 1);          glVertex4(p + v2);
@@ -431,7 +431,8 @@ void Galaxy::renderGalaxyPointSprites(const GLContext&,
 #endif
         }
     }
-#ifdef UseOpenGL
+//#ifdef UseOpenGL
+#if 1
     glEnd();
 #else
     glDisableClientState(GL_VERTEX_ARRAY);

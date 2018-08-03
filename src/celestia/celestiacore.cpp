@@ -4155,12 +4155,14 @@ void CelestiaCore::renderOverlay()
 
             glEnableClientState(GL_VERTEX_ARRAY);
             glEnableClientState(GL_COLOR_ARRAY);
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
             glVertexPointer(2, GL_INT, 0, vtx1);
             glTexCoordPointer(2, GL_FLOAT, 0, tex1);
             glColorPointer(4, GL_FLOAT, 0, col1);
             glDrawArrays(GL_TRIANGLE_FAN,0,4);
 
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
             glDisableClientState(GL_COLOR_ARRAY);
             glDisableClientState(GL_VERTEX_ARRAY);
 #endif
