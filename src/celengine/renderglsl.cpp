@@ -621,7 +621,6 @@ static void renderRingSystem(float innerRadius,
     }
     glEnd();
 #else
-    assert(nSections % 10 == 0);
 /*
 https://pandorawiki.org/Porting_to_GLES_from_GL
 https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
@@ -633,9 +632,10 @@ https://www.reddit.com/r/gamedev/comments/1hfqg0/looking_for_tips_opengles_11_te
 https://github.com/emileb/jwzgles/blob/master/jwzgles.c
 */
 
+    // OMG! XXX
+    GLfloat vtx1[(nSections + 1) * 3 * 2];
+    GLfloat tex1[(nSections + 1) * 2 * 2];
 
-    GLfloat vtx1[nSections * 3 * 2 / 10 ];
-    GLfloat tex1[nSections * 2 * 2 / 10 ];
     for (unsigned int i = 0, j = 0, k = 0; i <= nSections; i++)
     {
         float t = (float) i / (float) nSections;
@@ -656,10 +656,33 @@ https://github.com/emileb/jwzgles/blob/master/jwzgles.c
         tex1[k++] = 0.5f;
 
     }
-    glVertexPointer(3, GL_FLOAT, 0, vtx1);
-    glTexCoordPointer(2, GL_FLOAT, 0, tex1);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, nSections * 2);
     glEnableClientState(GL_VERTEX_ARRAY);
+
+    for (unsigned int i = 0, j = 0; i < nSections * 3 * 2; )
+    {
+        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j]);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+6]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+4]);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+12]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+8]);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+18]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+12]);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+24]);
+        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+16]);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        i += 30;
+        j += 20;
+    }
+
     glDisableClientState(GL_VERTEX_ARRAY);
 #endif
 }
