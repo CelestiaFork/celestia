@@ -605,8 +605,8 @@ static void renderRingSystem(float innerRadius,
                              unsigned int nSections)
 {
     float angle = endAngle - beginAngle;
-//#ifdef UseOpenGL
-#if 1
+#ifdef UseOpenGL
+//#if 1
     glBegin(GL_QUAD_STRIP);
     for (unsigned int i = 0; i <= nSections; i++)
     {
@@ -658,29 +658,11 @@ https://github.com/emileb/jwzgles/blob/master/jwzgles.c
     }
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    for (unsigned int i = 0, j = 0; i < nSections * 3 * 2; )
+    for (unsigned int i = 0, j = 0; i < (nSections + 1) * 3 * 2; i+=6, j+=4)
     {
         glVertexPointer(3, GL_FLOAT, 0, &vtx1[i]);
         glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j]);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+6]);
-        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+4]);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+12]);
-        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+8]);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+18]);
-        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+12]);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i+24]);
-        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j+16]);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        i += 30;
-        j += 20;
     }
 
     glDisableClientState(GL_VERTEX_ARRAY);
