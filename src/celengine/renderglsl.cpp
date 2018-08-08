@@ -656,16 +656,58 @@ https://github.com/emileb/jwzgles/blob/master/jwzgles.c
         tex1[k++] = 0.5f;
 
     }
+
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    for (unsigned int i = 0, j = 0; i < (nSections + 1) * 3 * 2; i+=6, j+=4)
+    for (unsigned int i = 0, j = 0; i < (nSections + 1) * 3 * 2; i+=3, j+=2)
     {
         glVertexPointer(3, GL_FLOAT, 0, &vtx1[i]);
         glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j]);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
     }
 
+/*
+//glNormal3f(0,0,1);
+for(int i = 0; i < nSections; i++){
+        float t = (float) i / (float) nSections;
+        float theta = beginAngle + t * angle;
+        float s = (float) sin(theta);
+        float c = (float) cos(theta);
+        float tn = (float) (i+1) / (float) nSections;
+        float thetan = beginAngle + tn * angle;
+        float sn = (float) sin(thetan);
+        float cn = (float) cos(thetan);
+
+
+	GLfloat vtx2[] = {
+//
+		innerRadius * c,  0, innerRadius * s,
+ 		outerRadius * cn, 0, outerRadius * sn,
+ 		outerRadius * c,  0, outerRadius * s,
+
+		innerRadius * c,  0, innerRadius * s,
+		innerRadius * cn, 0, innerRadius * sn,
+		outerRadius * cn, 0, outerRadius * sn,
+//
+		innerRadius * c,  0, innerRadius * s,
+		innerRadius * cn, 0, innerRadius * sn,
+		outerRadius * cn, 0, outerRadius * sn,
+		outerRadius * c,  0, outerRadius * s,
+	};
+	GLfloat tex2[] = {
+		0, 0,
+		1, 0,
+		1, 1,
+		0, 1,
+	};
+	glVertexPointer(3, GL_FLOAT, 0, vtx2);
+	glTexCoordPointer(2, GL_FLOAT, 0, tex2);
+	glDrawArrays(GL_TRIANGLES, 0, 4);
+}
+*/
     glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
 }
 
