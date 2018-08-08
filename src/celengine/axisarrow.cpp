@@ -45,6 +45,7 @@ static void RenderArrow(float shaftLength,
         costab[i] = (float) cos(theta);
     }
 
+#ifdef UseOpenGL
     // Render the circle at the botton of the arrow shaft
     glBegin(GL_TRIANGLE_FAN);
     glVertex3f(0.0f, 0.0f, 0.0f);
@@ -84,24 +85,109 @@ static void RenderArrow(float shaftLength,
         glVertex3f(headRadius * costab[n], headRadius * sintab[n], shaftLength);
     }
     glEnd();
+#else
+    // Render the circle at the botton of the arrow shaft
+    auto vtx1 = new GLfloat[nSections+2][3];
+    memset((void*)vtx1, 0, (nSections+2)*3);
+
+    for (i = 0; i <= nSections; i++)
+    {
+        unsigned int n = (nSections - i) % nSections;
+        vtx1[i+1][0] = shaftRadius * costab[n];
+        vtx1[i+1][1] = shaftRadius * sintab[n];
+    }
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, nSections+2);
+
+    // Render the arrow shaft
+    auto vtx2 = new GLfloat[(nSections+1)*2*3];
+    unsigned j;
+    for (i = 0, j = 0; i <= nSections; i++)
+    {
+        unsigned int n = i % nSections;
+        vtx2[j++] = shaftRadius * costab[n];
+        vtx2[j++] = shaftRadius * sintab[n];
+        vtx2[j++] = shaftLength;
+        vtx2[j++] = shaftRadius * costab[n];
+        vtx2[j++] = shaftRadius * sintab[n];
+        vtx2[j++] = 0;
+    }
+
+    for (i = 0; i < (nSections+1)*2*3; i+= 6)
+    {
+        glVertexPointer(3, GL_FLOAT, 0, &vtx2[i]);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
+
+    // Render the annulus
+    for (i = 0, j = 0; i <= nSections; i++)
+    {
+        unsigned int n = i % nSections;
+        vtx2[j++] = headRadius * costab[n];
+        vtx2[j++] = headRadius * sintab[n];
+        vtx2[j++] = shaftLength;
+        vtx2[j++] = shaftRadius * costab[n];
+        vtx2[j++] = shaftRadius * sintab[n];
+        vtx2[j++] = shaftLength;
+    }
+
+    for (i = 0; i < (nSections+1)*2*3; i+= 6)
+    {
+        glVertexPointer(3, GL_FLOAT, 0, &vtx2[i]);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
+    delete[] vtx2;
+
+    // Render the head of the arrow
+    vtx1[0][0] = 0; vtx1[0][1] = 0; vtx1[0][2] = shaftLength + headLength;
+    for (i = 0; i <= nSections; i++)
+    {
+        unsigned int n = i % nSections;
+        vtx1[i+1][0] = headRadius * costab[n];
+        vtx1[i+1][1] = headRadius * sintab[n];
+        vtx1[i+1][2] = shaftLength;
+    }
+
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, nSections+2);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    delete[] vtx1;
+#endif
 }
 
 
 // Draw letter x in xz plane
 static void RenderX()
 {
+#ifdef UseOpenGL
     glBegin(GL_LINES);
     glVertex3f(0, 0, 0);
     glVertex3f(1, 0, 1);
     glVertex3f(1, 0, 0);
     glVertex3f(0, 0, 1);
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    static GLfloat vtx1[] = {
+        0, 0, 0,
+        1, 0, 1,
+        1, 0, 0,
+        0, 0, 1
+    };
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+    glDrawArrays(GL_LINES, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 }
 
 
 // Draw letter y in xz plane
 static void RenderY()
 {
+#ifdef UseOpenGL
     glBegin(GL_LINES);
     glVertex3f(0, 0, 1);
     glVertex3f(0.5f, 0, 0.5f);
@@ -110,18 +196,45 @@ static void RenderY()
     glVertex3f(0.5f, 0, 0);
     glVertex3f(0.5f, 0, 0.5f);
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    static GLfloat vtx1[] = {
+        0,    0, 1,
+        0.5f, 0, 0.5f,
+        1,    0, 1,
+        0.5f, 0, 0.5f,
+        0.5f, 0, 0,
+        0.5f, 0, 0.5f
+    };
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+    glDrawArrays(GL_LINES, 0, 6);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 }
 
 
 // Draw letter z in xz plane
 static void RenderZ()
 {
+#ifdef UseOpenGL
     glBegin(GL_LINE_STRIP);
     glVertex3f(0, 0, 1);
     glVertex3f(1, 0, 1);
     glVertex3f(0, 0, 0);
     glVertex3f(1, 0, 0);
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    static GLfloat vtx1[] = {
+        0, 0, 1,
+        1, 0, 1,
+        0, 0, 0,
+        1, 0, 0
+    };
+    glVertexPointer(3, GL_FLOAT, 0, vtx1);
+    glDrawArrays(GL_LINE_STRIP, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 }
 
 
