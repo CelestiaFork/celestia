@@ -218,6 +218,7 @@ VisibleRegion::render(Renderer* /* renderer */,
     double ee = e_.squaredNorm();
 
     glColor4f(m_color.red(), m_color.green(), m_color.blue(), opacity);
+#define UseOpenGL
 #ifdef UseOpenGL
     glBegin(GL_LINE_LOOP);
 #else
@@ -247,6 +248,7 @@ VisibleRegion::render(Renderer* /* renderer */,
     glDisableClientState(GL_VERTEX_ARRAY);
     delete[] vtx;
 #endif
+#undef UseOpenGL
 
     glPopMatrix();
 
