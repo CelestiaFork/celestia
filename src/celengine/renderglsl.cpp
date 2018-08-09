@@ -43,6 +43,11 @@
 #include <celutil/utf8.h>
 #include <celutil/util.h>
 
+#if 0
+#include <chrono>
+using namespace std::chrono;
+#endif
+
 using namespace cmod;
 using namespace Eigen;
 using namespace std;
@@ -602,8 +607,11 @@ static void renderRingSystem(float innerRadius,
                              float outerRadius,
                              float beginAngle,
                              float endAngle,
-                             unsigned int nSections)
+                             unsigned int nSections, GLfloat vtx[], GLshort tex[])
 {
+#if 0
+high_resolution_clock::time_point t1 = high_resolution_clock::now();
+#endif
     float angle = endAngle - beginAngle;
 #ifdef UseOpenGL
     glBegin(GL_QUAD_STRIP);
@@ -623,65 +631,38 @@ static void renderRingSystem(float innerRadius,
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    GLshort tex2[] = { 0, 0, 0, 1, 1, 1, 1, 0 };
-
-    GLfloat vtx0[12], vtx1[12];
-    memset(vtx0, 0, sizeof(GLfloat)*12);
-    memset(vtx1, 0, sizeof(GLfloat)*12);
-
-    for (size_t i = 0; i < nSections; i++)
+    for (unsigned i = 0, j = 0, k = 0; i <= nSections; i++)
     {
-#if 1
         float t = (float) i / (float) nSections;
         float theta = beginAngle + t * angle;
         float s = (float) sin(theta);
         float c = (float) cos(theta);
-#endif
-        float tn = (float) (i+1) / (float) nSections;
-        float thetan = beginAngle + tn * angle;
-        float sn = (float) sin(thetan);
-        float cn = (float) cos(thetan);
-#if 1
-        GLfloat vtx2[] = {
-            innerRadius * c,  0, innerRadius * s,
-            innerRadius * cn, 0, innerRadius * sn,
-            outerRadius * cn, 0, outerRadius * sn,
-            outerRadius * c,  0, outerRadius * s,
-        };
 
-        glVertexPointer(3, GL_FLOAT, 0, vtx2);
-#else
+        vtx[j]   = c * innerRadius; vtx[j+2] = s * innerRadius;
+        vtx[j+3] = c * outerRadius; vtx[j+5] = s * outerRadius;
+        j += 6;
+
         if (i & 1)
         {
-            vtx1[3] = innerRadius * cn;
-            vtx1[5] = innerRadius * sn;
-            vtx1[6] = outerRadius * cn;
-            vtx1[8] = outerRadius * sn;
-            glVertexPointer(3, GL_FLOAT, 0, vtx1);
+            tex[k+2] = 1;
+            k += 4;
         }
         else
         {
-            float t = (float) i / (float) nSections;
-            float theta = beginAngle + t * angle;
-            float s = (float) sin(theta);
-            float c = (float) cos(theta);
-            vtx0[0] = innerRadius * c;
-            vtx0[2] = innerRadius * s;
-            vtx0[3] = vtx1[0] = innerRadius * cn;
-            vtx0[5] = vtx1[2] = innerRadius * sn;
-            vtx0[6] = vtx1[9] = outerRadius * cn;
-            vtx0[8] = vtx1[11] = outerRadius * sn;
-            vtx0[9] = outerRadius * c;
-            vtx0[11] = outerRadius * s;
-            glVertexPointer(3, GL_FLOAT, 0, vtx0);
+            k++; tex[k++] = 1; tex[k++] = 1; tex[k++] = 1;
         }
-#endif
-        glTexCoordPointer(2, GL_SHORT, 0, tex2);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
+    glVertexPointer(3, GL_FLOAT, 0, vtx);
+    glTexCoordPointer(2, GL_SHORT, 0, tex);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, (nSections+1)*2);
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
+#if 0
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto duration = duration_cast<nanoseconds>( t2 - t1 ).count();
+    cout << duration << '\n';
 #endif
 }
 
@@ -799,8 +780,17 @@ void renderRings_GLSL(RingSystem& rings,
     else
         glDisable(GL_TEXTURE_2D);
 
-    renderRingSystem(inner, outer, 0, (float) PI * 2.0f, nSections);
-    renderRingSystem(inner, outer, (float) PI * 2.0f, 0, nSections);
+    unsigned nVtx = (nSections+1)*2;
+    auto vtx = new GLfloat[nVtx * 3];
+    auto tex = new GLshort[nVtx * 2];
+    memset(vtx, 0, nVtx * 3 * sizeof(vtx[0]));
+    memset(tex, 0, nVtx * 2 * sizeof(tex[0]));
+
+    renderRingSystem(inner, outer, 0, (float) PI * 2.0f, nSections, vtx, tex);
+    renderRingSystem(inner, outer, (float) PI * 2.0f, 0, nSections, vtx, tex);
+
+    delete[] vtx;
+    delete[] tex;
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
