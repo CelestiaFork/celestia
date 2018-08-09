@@ -234,9 +234,14 @@ VisibleRegion::render(Renderer* /* renderer */,
         toCenter *= maxSemiAxis * scale;
 #ifdef UseOpenGL
         glVertex3dv(toCenter.data());
+        auto data = toCenter.data();
 #else
-        memcpy((void*) &vtx[i], (const void*) toCenter.data(), 3*sizeof(GLfloat));
+	auto data = toCenter.data();
+        for (unsigned j = 0; j < 3; j++)
+            vtx[i+j] = (float) data[j];
+//        memcpy((void*) &vtx[i], (const void*) toCenter.cast<float>().data(), 3*sizeof(GLfloat));
 #endif
+//cout << i << ' ' << data[0] << ' ' << data[1] << ' ' << data[2] << '\n';
     }
 
 #ifdef UseOpenGL
@@ -244,7 +249,7 @@ VisibleRegion::render(Renderer* /* renderer */,
 #else
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, vtx);
-    glDrawArrays(GL_LINE_STRIP, 0, nSections);
+    glDrawArrays(GL_LINE_LOOP, 0, nSections);
     glDisableClientState(GL_VERTEX_ARRAY);
     delete[] vtx;
 #endif

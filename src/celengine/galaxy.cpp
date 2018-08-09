@@ -419,7 +419,7 @@ void Galaxy::renderGalaxyPointSprites(const GLContext&,
                 pv2[0], pv2[1], pv2[2], pv2[3],
                 pv3[0], pv3[1], pv3[2], pv3[3]
             };
-            GLfloat tex1[] = {
+            static GLfloat tex1[] = {
                 0, 0,
                 1, 0,
                 1, 1,

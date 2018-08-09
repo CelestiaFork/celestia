@@ -436,7 +436,7 @@ void Globular::renderGlobularPointSprites(const GLContext&,
         tidalSize * v2.x, tidalSize * v2.y, tidalSize * v2.z,
         tidalSize * v3.x, tidalSize * v3.y, tidalSize * v3.z
     };
-    GLfloat tex1[] = {
+    static GLfloat tex1[] = {
         0, 0,
         1, 0,
         1, 1,
