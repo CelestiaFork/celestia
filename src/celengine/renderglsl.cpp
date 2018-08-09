@@ -606,7 +606,6 @@ static void renderRingSystem(float innerRadius,
 {
     float angle = endAngle - beginAngle;
 #ifdef UseOpenGL
-//#if 1
     glBegin(GL_QUAD_STRIP);
     for (unsigned int i = 0; i <= nSections; i++)
     {
@@ -621,91 +620,66 @@ static void renderRingSystem(float innerRadius,
     }
     glEnd();
 #else
-/*
-https://pandorawiki.org/Porting_to_GLES_from_GL
-https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
-https://gamedev.stackexchange.com/questions/10727/fastest-way-to-draw-quads-in-opengl-es
-http://www.songho.ca/opengl/gl_vertexarray.html
-https://www.khronos.org/opengl/wiki/Talk:FAQ
-http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-9-vbo-indexing/
-https://www.reddit.com/r/gamedev/comments/1hfqg0/looking_for_tips_opengles_11_text_rendering/
-https://github.com/emileb/jwzgles/blob/master/jwzgles.c
-*/
-
-    // OMG! XXX
-    GLfloat vtx1[(nSections + 1) * 3 * 2];
-    GLfloat tex1[(nSections + 1) * 2 * 2];
-
-    for (unsigned int i = 0, j = 0, k = 0; i <= nSections; i++)
-    {
-        float t = (float) i / (float) nSections;
-        float theta = beginAngle + t * angle;
-        float s = (float) sin(theta);
-        float c = (float) cos(theta);
-
-        vtx1[j++] = c * innerRadius;
-        vtx1[j++] = 0;
-        vtx1[j++] = s * innerRadius;
-        vtx1[j++] = c * outerRadius;
-        vtx1[j++] = 0;
-        vtx1[j++] = s * outerRadius;
-
-        tex1[k++] = 0.0f;
-        tex1[k++] = 0.5f;
-        tex1[k++] = 1.0f;
-        tex1[k++] = 0.5f;
-
-    }
-
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    for (unsigned int i = 0, j = 0; i < (nSections + 1) * 3 * 2; i+=3, j+=2)
-    {
-        glVertexPointer(3, GL_FLOAT, 0, &vtx1[i]);
-        glTexCoordPointer(2, GL_FLOAT, 0, &tex1[j]);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
-    }
+    GLshort tex2[] = { 0, 0, 0, 1, 1, 1, 1, 0 };
 
-/*
-//glNormal3f(0,0,1);
-for(int i = 0; i < nSections; i++){
+    GLfloat vtx0[12], vtx1[12];
+    memset(vtx0, 0, sizeof(GLfloat)*12);
+    memset(vtx1, 0, sizeof(GLfloat)*12);
+
+    for (size_t i = 0; i < nSections; i++)
+    {
+#if 1
         float t = (float) i / (float) nSections;
         float theta = beginAngle + t * angle;
         float s = (float) sin(theta);
         float c = (float) cos(theta);
+#endif
         float tn = (float) (i+1) / (float) nSections;
         float thetan = beginAngle + tn * angle;
         float sn = (float) sin(thetan);
         float cn = (float) cos(thetan);
+#if 1
+        GLfloat vtx2[] = {
+            innerRadius * c,  0, innerRadius * s,
+            innerRadius * cn, 0, innerRadius * sn,
+            outerRadius * cn, 0, outerRadius * sn,
+            outerRadius * c,  0, outerRadius * s,
+        };
 
+        glVertexPointer(3, GL_FLOAT, 0, vtx2);
+#else
+        if (i & 1)
+        {
+            vtx1[3] = innerRadius * cn;
+            vtx1[5] = innerRadius * sn;
+            vtx1[6] = outerRadius * cn;
+            vtx1[8] = outerRadius * sn;
+            glVertexPointer(3, GL_FLOAT, 0, vtx1);
+        }
+        else
+        {
+            float t = (float) i / (float) nSections;
+            float theta = beginAngle + t * angle;
+            float s = (float) sin(theta);
+            float c = (float) cos(theta);
+            vtx0[0] = innerRadius * c;
+            vtx0[2] = innerRadius * s;
+            vtx0[3] = vtx1[0] = innerRadius * cn;
+            vtx0[5] = vtx1[2] = innerRadius * sn;
+            vtx0[6] = vtx1[9] = outerRadius * cn;
+            vtx0[8] = vtx1[11] = outerRadius * sn;
+            vtx0[9] = outerRadius * c;
+            vtx0[11] = outerRadius * s;
+            glVertexPointer(3, GL_FLOAT, 0, vtx0);
+        }
+#endif
+        glTexCoordPointer(2, GL_SHORT, 0, tex2);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
 
-	GLfloat vtx2[] = {
-//
-		innerRadius * c,  0, innerRadius * s,
- 		outerRadius * cn, 0, outerRadius * sn,
- 		outerRadius * c,  0, outerRadius * s,
-
-		innerRadius * c,  0, innerRadius * s,
-		innerRadius * cn, 0, innerRadius * sn,
-		outerRadius * cn, 0, outerRadius * sn,
-//
-		innerRadius * c,  0, innerRadius * s,
-		innerRadius * cn, 0, innerRadius * sn,
-		outerRadius * cn, 0, outerRadius * sn,
-		outerRadius * c,  0, outerRadius * s,
-	};
-	GLfloat tex2[] = {
-		0, 0,
-		1, 0,
-		1, 1,
-		0, 1,
-	};
-	glVertexPointer(3, GL_FLOAT, 0, vtx2);
-	glTexCoordPointer(2, GL_FLOAT, 0, tex2);
-	glDrawArrays(GL_TRIANGLES, 0, 4);
-}
-*/
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
