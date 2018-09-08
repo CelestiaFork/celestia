@@ -218,14 +218,12 @@ VisibleRegion::render(Renderer* /* renderer */,
     double ee = e_.squaredNorm();
 
     glColor4f(m_color.red(), m_color.green(), m_color.blue(), opacity);
-#define UseOpenGL
 #ifdef UseOpenGL
     glBegin(GL_LINE_LOOP);
 #else
     auto vtx = new GLfloat[3*nSections];
 #endif
-
-    for (unsigned i = 0; i < nSections; i++)
+    for (unsigned i = 0, j = 0; i < nSections; i++, j += 3)
     {
         double theta = (double) i / (double) (nSections) * 2.0 * PI;
         Vector3d w = cos(theta) * uAxis + sin(theta) * vAxis;
@@ -234,14 +232,14 @@ VisibleRegion::render(Renderer* /* renderer */,
         toCenter *= maxSemiAxis * scale;
 #ifdef UseOpenGL
         glVertex3dv(toCenter.data());
-        auto data = toCenter.data();
 #else
-	auto data = toCenter.data();
-        for (unsigned j = 0; j < 3; j++)
-            vtx[i+j] = (float) data[j];
-//        memcpy((void*) &vtx[i], (const void*) toCenter.cast<float>().data(), 3*sizeof(GLfloat));
+	auto data = toCenter.cast<float>();
+        vtx[j+0] = data[0];
+        vtx[j+1] = data[1];
+        vtx[j+2] = data[2];
+
+//        memcpy(&vtx[j], Vector3f(toCenter.cast<float>()).data(), 3*sizeof(GLfloat));
 #endif
-//cout << i << ' ' << data[0] << ' ' << data[1] << ' ' << data[2] << '\n';
     }
 
 #ifdef UseOpenGL
@@ -253,7 +251,6 @@ VisibleRegion::render(Renderer* /* renderer */,
     glDisableClientState(GL_VERTEX_ARRAY);
     delete[] vtx;
 #endif
-#undef UseOpenGL
 
     glPopMatrix();
 
