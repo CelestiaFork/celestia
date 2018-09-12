@@ -88,8 +88,11 @@ void Marker::render(float size) const
 }
 
 
-
+#ifdef UseOpenGL
 static void DrawCircle(float s)
+#else
+static void DrawCircle(float s, GLenum style)
+#endif
 {
     if (s < 1.0f)
         s = 1.0f; //  0 and negative values are not allowed in the case of circle markers.
@@ -97,11 +100,29 @@ static void DrawCircle(float s)
         s = 1024.0f; //  Bigger values would give a too high number of segments in the circle markers.
 
     int step = (int) (60 / sqrt(s));
+#ifdef UseOpenGL
     for (int i = 0; i < 360; i += step)
+#else
+    auto vtx1 = new GLfloat[2 * 360 / step];
+    for (int i = 0, j = 0; i < 360; i += step)
+#endif
     {
         float degInRad = (float) (i * PI / 180);
+#ifdef UseOpenGL
         glVertex3f((float) cos(degInRad) * s, (float) sin(degInRad) * s, 0.0f);
+#else
+        vtx1[j] = (float) cos(degInRad) * s; j++;
+        vtx1[j] = (float) sin(degInRad) * s; j++;
+#endif
     }
+
+#ifndef UseOpenGL
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, vtx1);
+    glDrawArrays(style, 0, 360 / step);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    delete[] vtx1;
+#endif
 }
 
 
@@ -154,36 +175,84 @@ void MarkerRepresentation::render(float size) const
     switch (m_symbol)
     {
     case Diamond:
+#ifdef UseOpenGL
         glBegin(GL_LINE_LOOP);
         glVertex3f(0.0f,    s, 0.0f);
         glVertex3f(   s, 0.0f, 0.0f);
         glVertex3f(0.0f,   -s, 0.0f);
         glVertex3f(  -s, 0.0f, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                0.0f,    s,
+                   s, 0.0f,
+                0.0f,   -s,
+                  -s, 0.0f
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
         break;
 
     case Plus:
+#ifdef UseOpenGL
         glBegin(GL_LINES);
         glVertex3f(0.0f,  s, 0.0f);
         glVertex3f(0.0f, -s, 0.0f);
         glVertex3f( s, 0.0f, 0.0f);
         glVertex3f(-s, 0.0f, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                0.0f,  s,
+                0.0f, -s,
+                 s, 0.0f,
+                -s, 0.0f
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_LINES, 0, 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
         break;
 
     case X:
+#ifdef UseOpenGL
         glBegin(GL_LINES);
         glVertex3f(-s, -s, 0.0f);
         glVertex3f( s,  s, 0.0f);
         glVertex3f( s, -s, 0.0f);
         glVertex3f(-s,  s, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                -s, -s,
+                 s,  s,
+                 s, -s,
+                -s,  s
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_LINES, 0, 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
         break;
 
     case Square:
+#ifdef UseOpenGL
         glBegin(GL_LINE_LOOP);
+#endif
 
     case FilledSquare:
+#ifdef UseOpenGL
         glBegin(GL_POLYGON);
 
         glVertex3f(-s, -s, 0.0f);
@@ -191,17 +260,46 @@ void MarkerRepresentation::render(float size) const
         glVertex3f( s,  s, 0.0f);
         glVertex3f(-s,  s, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                -s, -s,
+                 s, -s,
+                 s,  s,
+                -s,  s
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(m_symbol == FilledSquare ? GL_POLYGON : GL_LINE_LOOP, 0, 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
         break;
 
     case Triangle:
+#ifdef UseOpenGL
         glBegin(GL_LINE_LOOP);
         glVertex3f(0.0f,  s, 0.0f);
         glVertex3f(   s, -s, 0.0f);
         glVertex3f(  -s, -s, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                0.0f, s,
+                 s,  -s,
+                -s,  -s,
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_LINE_LOOP, 0, 3);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
         break;
 
     case RightArrow:
+#ifdef UseOpenGL
         glBegin(GL_POLYGON);
         glVertex3f(-3*s, float(s/3), 0.0f);
         glVertex3f(-3*s, float(-s/3), 0.0f);
@@ -213,9 +311,28 @@ void MarkerRepresentation::render(float size) const
         glVertex3f(-2*s, float(-2*s/3), 0.0f);
         glVertex3f(-s, 0.0f, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                -3*s, float(s/3),
+                -3*s, float(-s/3),
+                -2*s, float(-s/4),
+                -2*s, float(s/4),
+                -2*s, float(2*s/3),
+                -2*s, float(-2*s/3),
+                  -s, 0.0f
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_POLYGON, 0, 4);
+            glDrawArrays(GL_POLYGON, 4, 3);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
         break;
 
     case LeftArrow:
+#ifdef UseOpenGL
         glBegin(GL_POLYGON);
         glVertex3f(3*s, float(-s/3), 0.0f);
         glVertex3f(3*s, float(s/3), 0.0f);
@@ -227,9 +344,29 @@ void MarkerRepresentation::render(float size) const
         glVertex3f(2*s, float(2*s/3), 0.0f);
         glVertex3f(s, 0.0f, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                3*s, float(-s/3),
+                3*s, float(s/3),
+                2*s, float(s/4),
+                2*s, float(-s/4),
+                2*s, float(-2*s/3),
+                2*s, float(2*s/3),
+                  s, 0.0f
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_POLYGON, 0, 4);
+            glDrawArrays(GL_POLYGON, 4, 3);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
+
         break;
 
     case UpArrow:
+#ifdef UseOpenGL
         glBegin(GL_POLYGON);
         glVertex3f(float(-s/3), -3*s, 0.0f);
         glVertex3f(float(s/3), -3*s, 0.0f);
@@ -241,9 +378,29 @@ void MarkerRepresentation::render(float size) const
         glVertex3f(float(2*s/3), -2*s, 0.0f);
         glVertex3f( 0.0f, -s, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                float(-s/3),   -3*s,
+                float(s/3),    -3*s,
+                float(s/4),    -2*s,
+                float(-s/4),   -2*s,
+                float(-2*s/3), -2*s,
+                float(2*s/3),  -2*s,
+                        0.0f,    -s
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_POLYGON, 0, 4);
+            glDrawArrays(GL_POLYGON, 4, 3);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
+
         break;
 
     case DownArrow:
+#ifdef UseOpenGL
         glBegin(GL_POLYGON);
         glVertex3f(float(s/3), 3*s, 0.0f);
         glVertex3f(float(-s/3), 3*s, 0.0f);
@@ -255,18 +412,45 @@ void MarkerRepresentation::render(float size) const
         glVertex3f(float(-2*s/3), 2*s, 0.0f);
         glVertex3f( 0.0f, s, 0.0f);
         glEnd();
+#else
+        {
+            GLfloat vtx1[] = {
+                float(s/3),    3*s,
+                float(-s/3),   3*s,
+                float(-s/4),   2*s,
+                float(s/4),    2*s,
+                float(2*s/3),  2*s,
+                float(-2*s/3), 2*s,
+                         0.0f,   s
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_POLYGON, 0, 4);
+            glDrawArrays(GL_POLYGON, 4, 3);
+            glDisableClientState(GL_VERTEX_ARRAY);
+        }
+#endif
+
         break;
 
     case Circle:
+#ifdef UseOpenGL
         glBegin(GL_LINE_LOOP);
         DrawCircle(s);
         glEnd();
+#else
+        DrawCircle(s, GL_LINE_LOOP);
+#endif
         break;
 
     case Disk:
+#ifdef UseOpenGL
         glBegin(GL_POLYGON);
         DrawCircle(s);
         glEnd();
+#else
+        DrawCircle(s, GL_POLYGON);
+#endif
         break;
 
     default:
