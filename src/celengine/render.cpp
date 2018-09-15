@@ -2385,9 +2385,17 @@ void Renderer::renderToBlurTexture(int blurLevel)
 
     if (useBlendSubtract)
     {
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, 0.0f, 1.0f);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, 0.0f, 1.0f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
         // Do not need to scale alpha so mask it off
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
         glEnable(GL_BLEND);
@@ -2402,12 +2410,20 @@ void Renderer::renderToBlurTexture(int blurLevel)
             glColor4f(-bias, -bias, -bias, 0.0f);
 
             glDisable(GL_TEXTURE_2D);
+#ifdef UseOpenGL
             glBegin(GL_QUADS);
             glVertex2f(0.0f,           0.0f);
             glVertex2f(1.f, 0.0f);
             glVertex2f(1.f, 1.f);
             glVertex2f(0.0f,           1.f);
             glEnd();
+#else
+            GLshort vtx1[] = { 0, 0,  1, 0,  1, 1,  0, 1 };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+#endif
 
             glEnable(GL_TEXTURE_2D);
             blurTextures[blurLevel]->bind();
@@ -2420,10 +2436,19 @@ void Renderer::renderToBlurTexture(int blurLevel)
             glBlendEquationEXT(GL_FUNC_ADD_EXT);
             glBlendFunc(GL_DST_COLOR, GL_ONE);
 
+#ifdef UseOpenGL
             glBegin(GL_QUADS);
             drawBlendedVertices(0.f, 0.f, 1.f); //x2
             drawBlendedVertices(0.f, 0.f, 1.f); //x2
             glEnd();
+#else
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
+            drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
+            glDisableClientState(GL_VERTEX_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
         }
 
         glDisable(GL_BLEND);
@@ -2434,6 +2459,7 @@ void Renderer::renderToBlurTexture(int blurLevel)
             glCopyTexImage2D(GL_TEXTURE_2D, blurLevel, GL_LUMINANCE, 0, 0,
                              blurTexWidth, blurTexHeight, 0);
             // Erase color, replace with luminance image
+#ifdef UseOpenGL
             glBegin(GL_QUADS);
             glColor4f(0.f, 0.f, 0.f, 1.f);
             glVertex2f(0.0f, 0.0f);
@@ -2444,6 +2470,20 @@ void Renderer::renderToBlurTexture(int blurLevel)
             glBegin(GL_QUADS);
             drawBlendedVertices(0.f, 0.f, 1.f);
             glEnd();
+#else
+            glColor4f(0.f, 0.f, 0.f, 1.f);
+            GLshort vtx1[] = { 0, 0,  1, 0,  1, 1,  0, 1 };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(2, GL_FLOAT, 0, vtx1);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            drawBlendedVertices(0.0f, 0.0f, 1.0f);
+            glDisableClientState(GL_VERTEX_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
         }
 
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -2455,9 +2495,17 @@ void Renderer::renderToBlurTexture(int blurLevel)
     {
         // GL_EXT_blend_subtract not supported
         // Use compatible (but slow) glPixelTransfer instead
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, 0.0f, 1.0f);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
         savedWScale = sceneTexWScale;
         savedHScale = sceneTexHScale;
         sceneTexWScale = blurWScale;
@@ -2494,17 +2542,36 @@ void Renderer::renderToBlurTexture(int blurLevel)
 
     // Butterworth low pass filter to reduce flickering dots
     {
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f,    0.0f, .5f*1.f);
         drawBlendedVertices(-xdelta, 0.0f, .5f*0.333f);
         drawBlendedVertices( xdelta, 0.0f, .5f*0.25f);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f,    0.0f, .5f*1.f);
+        drawBlendedVertices(-xdelta, 0.0f, .5f*0.333f);
+        drawBlendedVertices( xdelta, 0.0f, .5f*0.25f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
         glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
                          blurTexWidth, blurTexHeight, 0);
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, -ydelta, .5f*0.667f);
         drawBlendedVertices(0.0f,  ydelta, .5f*0.333f);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, -ydelta, .5f*0.667f);
+        drawBlendedVertices(0.0f,  ydelta, .5f*0.333f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
         glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
                          blurTexWidth, blurTexHeight, 0);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -2573,18 +2640,39 @@ void Renderer::drawSceneTexture()
     if (sceneTexture == 0)
         return;
     glBindTexture(GL_TEXTURE_2D, sceneTexture);
+#ifdef UseOpenGL
     glBegin(GL_QUADS);
     drawBlendedVertices(0.0f, 0.0f, 1.0f);
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    drawBlendedVertices(0.0f, 0.0f, 1.0f);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 }
 
 void Renderer::drawBlendedVertices(float xdelta, float ydelta, float blend)
 {
     glColor4f(1.0f, 1.0f, 1.0f, blend);
+#ifdef UseOpenGL
     glTexCoord2i(0, 0); glVertex2f(xdelta,                ydelta);
     glTexCoord2i(1, 0); glVertex2f(sceneTexWScale+xdelta, ydelta);
     glTexCoord2i(1, 1); glVertex2f(sceneTexWScale+xdelta, sceneTexHScale+ydelta);
     glTexCoord2i(0, 1); glVertex2f(xdelta,                sceneTexHScale+ydelta);
+#else
+    GLshort tex1[] = { 0, 0,  1, 0,  1, 1,  0, 1 };
+    GLfloat vtx1[] = {
+        xdelta,                ydelta,
+        sceneTexWScale+xdelta, ydelta,
+        sceneTexWScale+xdelta, sceneTexHScale+ydelta,
+        xdelta,                sceneTexHScale+ydelta
+    };
+    glVertexPointer(2, GL_FLOAT, 0, vtx1);
+    glTexCoordPointer(2, GL_FLOAT, 0, tex1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+#endif
 }
 
 void Renderer::drawGaussian3x3(float xdelta, float ydelta, GLsizei width, GLsizei height, float blend)
@@ -2595,19 +2683,39 @@ void Renderer::drawGaussian3x3(float xdelta, float ydelta, GLsizei width, GLsize
         gaussianLists[0] = glGenLists(1);
         glNewList(gaussianLists[0], GL_COMPILE);
 #endif
+
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, 0.0f, blend);
         drawBlendedVertices(-xdelta, 0.0f, 0.25f*blend);
         drawBlendedVertices( xdelta, 0.0f, 0.20f*blend);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, 0.0f, blend);
+        drawBlendedVertices(-xdelta, 0.0f, 0.25f*blend);
+        drawBlendedVertices( xdelta, 0.0f, 0.20f*blend);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
         // Take result of horiz pass and apply vertical pass
         glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
                          width, height, 0);
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, -ydelta, 0.429f);
         drawBlendedVertices(0.0f,  ydelta, 0.300f);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, -ydelta, 0.429f);
+        drawBlendedVertices(0.0f,  ydelta, 0.300f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 #ifdef USE_BLOOM_LISTS
         glEndList();
     }
@@ -2623,6 +2731,7 @@ void Renderer::drawGaussian5x5(float xdelta, float ydelta, GLsizei width, GLsize
         gaussianLists[1] = glGenLists(1);
         glNewList(gaussianLists[1], GL_COMPILE);
 #endif
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, 0.0f, blend);
         drawBlendedVertices(-xdelta,      0.0f, 0.475f*blend);
@@ -2630,14 +2739,37 @@ void Renderer::drawGaussian5x5(float xdelta, float ydelta, GLsizei width, GLsize
         drawBlendedVertices(-2.0f*xdelta, 0.0f, 0.075f*blend);
         drawBlendedVertices( 2.0f*xdelta, 0.0f, 0.075f*blend);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, 0.0f, blend);
+        drawBlendedVertices(-xdelta,      0.0f, 0.475f*blend);
+        drawBlendedVertices( xdelta,      0.0f, 0.475f*blend);
+        drawBlendedVertices(-2.0f*xdelta, 0.0f, 0.075f*blend);
+        drawBlendedVertices( 2.0f*xdelta, 0.0f, 0.075f*blend);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
+
         glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
                          width, height, 0);
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, -ydelta,      0.475f);
         drawBlendedVertices(0.0f,  ydelta,      0.475f);
         drawBlendedVertices(0.0f, -2.0f*ydelta, 0.075f);
         drawBlendedVertices(0.0f,  2.0f*ydelta, 0.075f);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, -ydelta,      0.475f);
+        drawBlendedVertices(0.0f,  ydelta,      0.475f);
+        drawBlendedVertices(0.0f, -2.0f*ydelta, 0.075f);
+        drawBlendedVertices(0.0f,  2.0f*ydelta, 0.075f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 #ifdef USE_BLOOM_LISTS
         glEndList();
     }
@@ -2653,6 +2785,7 @@ void Renderer::drawGaussian9x9(float xdelta, float ydelta, GLsizei width, GLsize
         gaussianLists[2] = glGenLists(1);
         glNewList(gaussianLists[2], GL_COMPILE);
 #endif
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, 0.0f, blend);
         drawBlendedVertices(-xdelta,      0.0f, 0.632f*blend);
@@ -2662,9 +2795,23 @@ void Renderer::drawGaussian9x9(float xdelta, float ydelta, GLsizei width, GLsize
         drawBlendedVertices(-3.0f*xdelta, 0.0f, 0.016f*blend);
         drawBlendedVertices( 3.0f*xdelta, 0.0f, 0.016f*blend);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, 0.0f, blend);
+        drawBlendedVertices(-xdelta,      0.0f, 0.632f*blend);
+        drawBlendedVertices( xdelta,      0.0f, 0.632f*blend);
+        drawBlendedVertices(-2.0f*xdelta, 0.0f, 0.159f*blend);
+        drawBlendedVertices( 2.0f*xdelta, 0.0f, 0.159f*blend);
+        drawBlendedVertices(-3.0f*xdelta, 0.0f, 0.016f*blend);
+        drawBlendedVertices( 3.0f*xdelta, 0.0f, 0.016f*blend);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
         glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
                          width, height, 0);
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         drawBlendedVertices(0.0f, -ydelta,      0.632f);
         drawBlendedVertices(0.0f,  ydelta,      0.632f);
@@ -2673,6 +2820,18 @@ void Renderer::drawGaussian9x9(float xdelta, float ydelta, GLsizei width, GLsize
         drawBlendedVertices(0.0f, -3.0f*ydelta, 0.016f);
         drawBlendedVertices(0.0f,  3.0f*ydelta, 0.016f);
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        drawBlendedVertices(0.0f, -ydelta,      0.632f);
+        drawBlendedVertices(0.0f,  ydelta,      0.632f);
+        drawBlendedVertices(0.0f, -2.0f*ydelta, 0.159f);
+        drawBlendedVertices(0.0f,  2.0f*ydelta, 0.159f);
+        drawBlendedVertices(0.0f, -3.0f*ydelta, 0.016f);
+        drawBlendedVertices(0.0f,  3.0f*ydelta, 0.016f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 #ifdef USE_BLOOM_LISTS
         glEndList();
     }
@@ -2683,13 +2842,29 @@ void Renderer::drawGaussian9x9(float xdelta, float ydelta, GLsizei width, GLsize
 void Renderer::drawBlur()
 {
     blurTextures[0]->bind();
+#ifdef UseOpenGL
     glBegin(GL_QUADS);
     drawBlendedVertices(0.0f, 0.0f, 1.0f);
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    drawBlendedVertices(0.0f, 0.0f, 1.0f);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
     blurTextures[1]->bind();
+#ifdef UseOpenGL
     glBegin(GL_QUADS);
     drawBlendedVertices(0.0f, 0.0f, 1.0f);
     glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    drawBlendedVertices(0.0f, 0.0f, 1.0f);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 }
 
 bool Renderer::getBloomEnabled()
@@ -3263,11 +3438,15 @@ void Renderer::draw(const Observer& observer,
             {
                 const Asterism::Chain& chain = ast->getChain(i);
 
+#if 1 /*def UseOpenGL*/
                     glBegin(GL_LINE_STRIP);
                     for (Asterism::Chain::const_iterator iter = chain.begin();
                          iter != chain.end(); iter++)
                         glVertex3fv(iter->data());
                     glEnd();
+#else
+                // TODO
+#endif
                 }
             }
         }
@@ -9942,6 +10121,7 @@ void Renderer::renderSkyGrids(const Observer& observer)
         // Draw the J2000.0 ecliptic; trivial, since this forms the basis for
         // Celestia's coordinate system.
         const int subdivision = 200;
+#ifdef UseOpenGL
         glColor(EclipticColor);
         glBegin(GL_LINE_LOOP);
         for (int i = 0; i < subdivision; i++)
@@ -9950,6 +10130,26 @@ void Renderer::renderSkyGrids(const Observer& observer)
             glVertex3f((float) cos(theta) * 1000.0f, 0.0f, (float) sin(theta) * 1000.0f);
         }
         glEnd();
+#else
+        glColor4f(EclipticColor.red(), EclipticColor.green(), EclipticColor.blue(), EclipticColor.alpha());
+        static GLfloat ecliptic_vtx[subdivision][3];
+        static bool initialized = false;
+        if (!initialized)
+        {
+            for (int i = 0; i < subdivision; i++)
+            {
+                double theta = (double) i / (double) subdivision * 2 * PI;
+                ecliptic_vtx[i][0] = (float) cos(theta) * 1000.0f;
+                ecliptic_vtx[i][1] =  0.0f;
+                ecliptic_vtx[i][2] = (float) sin(theta) * 1000.0f;
+            }
+            initialized = true;
+        }
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3, GL_FLOAT, 0, ecliptic_vtx);
+        glDrawArrays(GL_LINE_LOOP, 0, subdivision);
+        glDisableClientState(GL_VERTEX_ARRAY);
+#endif
     }
 }
 

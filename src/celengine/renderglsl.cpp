@@ -607,7 +607,11 @@ static void renderRingSystem(float innerRadius,
                              float outerRadius,
                              float beginAngle,
                              float endAngle,
+#ifdef UseOpenGL
+                             unsigned int nSections)
+#else
                              unsigned int nSections, GLfloat vtx[], GLshort tex[])
+#endif
 {
 #if 0
 high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -780,6 +784,10 @@ void renderRings_GLSL(RingSystem& rings,
     else
         glDisable(GL_TEXTURE_2D);
 
+#ifdef UseOpenGL
+    renderRingSystem(inner, outer, 0, (float) PI * 2.0f, nSections);
+    renderRingSystem(inner, outer, (float) PI * 2.0f, 0, nSections);
+#else
     unsigned nVtx = (nSections+1)*2;
     auto vtx = new GLfloat[nVtx * 3];
     auto tex = new GLshort[nVtx * 2];
@@ -791,6 +799,7 @@ void renderRings_GLSL(RingSystem& rings,
 
     delete[] vtx;
     delete[] tex;
+#endif
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
