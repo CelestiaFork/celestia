@@ -21,8 +21,8 @@ static FragmentProcessor* fpNV = NULL;
 
 
 GLContext::GLContext() :
-    renderPath(GLPath_Basic),
-    vertexPath(VPath_Basic),
+    renderPath(GLPath_GLSL),
+    vertexPath(VPath_ARB),
     vertexProc(NULL),
     maxSimultaneousTextures(1)
 {
@@ -107,9 +107,6 @@ bool GLContext::setRenderPath(GLRenderPath path)
 
     switch (path)
     {
-    case GLPath_Basic:
-        vertexPath = VPath_Basic;
-        break;
     case GLPath_GLSL:
         vertexPath = VPath_ARB;
         break;
@@ -127,9 +124,6 @@ bool GLContext::renderPathSupported(GLRenderPath path) const
 {
     switch (path)
     {
-    case GLPath_Basic:
-        return true;
-
     case GLPath_GLSL:
         return GLEW_ARB_shader_objects &&
                GLEW_ARB_shading_language_100 &&
@@ -144,6 +138,7 @@ bool GLContext::renderPathSupported(GLRenderPath path) const
 
 GLContext::GLRenderPath GLContext::nextRenderPath()
 {
+#if 0
     GLContext::GLRenderPath newPath = renderPath;
 
     do {
@@ -155,6 +150,8 @@ GLContext::GLRenderPath GLContext::nextRenderPath()
     renderPath = newPath;
 
     return renderPath;
+#endif
+    return GLPath_GLSL;
 }
 
 
@@ -166,7 +163,7 @@ bool GLContext::extensionSupported(const string& ext) const
 
 bool GLContext::bumpMappingSupported() const
 {
-    return renderPath != GLPath_Basic;
+    return true;
 }
 
 
@@ -178,7 +175,7 @@ GLContext::VertexPath GLContext::getVertexPath() const
 
 VertexProcessor* GLContext::getVertexProcessor() const
 {
-    return vertexPath == VPath_Basic ? NULL : vertexProc;
+    return vertexProc;
 }
 
 

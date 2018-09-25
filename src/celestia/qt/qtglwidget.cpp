@@ -122,19 +122,17 @@ static GLContext::GLRenderPath getBestAvailableRenderPath(const GLContext& glc)
 {
     const GLContext::GLRenderPath renderPaths[] = {
         GLContext::GLPath_GLSL,
-        GLContext::GLPath_Basic,
     };
 
+#if 0
     for (unsigned i = 0; i < sizeof(renderPaths) / sizeof(renderPaths[0]); i++)
     {
         if (glc.renderPathSupported(renderPaths[i]))
             return renderPaths[i];
     }
+#endif
 
-    // No supported render path? Something has gone very wrong...
-    assert(glc.renderPathSupported(GLContext::GLPath_Basic));
-
-    return GLContext::GLPath_Basic;
+    return GLContext::GLPath_GLSL;
 }
 
 
