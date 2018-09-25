@@ -49,27 +49,6 @@ unsigned int vp::nightLights_2lightHDR = 0;
 #endif
 
 
-class VertexProcessorNV : public VertexProcessor
-{
- public:
-    VertexProcessorNV();
-    virtual ~VertexProcessorNV();
-
-    virtual void enable();
-    virtual void disable();
-    virtual void use(unsigned int);
-    virtual void parameter(vp::Parameter, float, float, float, float);
-    virtual void parameter(vp::Parameter, const float*);
-
-    virtual void enableAttribArray(unsigned int);
-    virtual void disableAttribArray(unsigned int);
-    virtual void attribArray(unsigned int index,
-                             int size,
-                             GLenum type,
-                             unsigned int stride,
-                             const void* pointer);
-};
-
 class VertexProcessorARB : public VertexProcessor
 {
  public:
@@ -92,7 +71,6 @@ class VertexProcessorARB : public VertexProcessor
 };
 
 
-
 static string* ReadTextFromFile(const string& filename)
 {
     ifstream textFile(filename.c_str(), ios::in);
@@ -106,39 +84,6 @@ static string* ReadTextFromFile(const string& filename)
         *s += c;
 
     return s;
-}
-
-
-static bool LoadNvVertexProgram(const string& filename, unsigned int& id)
-{
-    cout << _("Loading NV vertex program: ") << filename << '\n';
-
-    string* source = ReadTextFromFile(filename);
-    if (source == NULL)
-    {
-        cout << _("Error loading NV vertex program: ") << filename << '\n';
-        return false;
-    }
-
-    glGenProgramsNV(1, (GLuint*) &id);
-    glLoadProgramNV(GL_VERTEX_PROGRAM_NV,
-                         id,
-                         source->length(),
-                         reinterpret_cast<const GLubyte*>(source->c_str()));
-
-    delete source;
-
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR)
-    {
-        GLint errPos = 0;
-        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_NV, &errPos);
-        cout << _("Error in vertex program ") << filename <<
-            " @ " << errPos << '\n';
-        return false;
-    }
-
-    return true;
 }
 
 
@@ -202,52 +147,6 @@ static bool LoadARBVertexProgram(const string& filename, unsigned int& id)
 }
 
 
-// ARB path is preferred; NV vertex program path will eventually go away
-VertexProcessor* vp::initNV()
-{
-    cout << _("Initializing NV vertex programs . . .\n");
-    if (!LoadNvVertexProgram("shaders/diffuse.vp", diffuse))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/specular.vp", specular))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/haze.vp", diffuseHaze))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/bumpdiffuse.vp", diffuseBump))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/bumphaze.vp", diffuseBumpHaze))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/shadowtex.vp", shadowTexture))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/diffuse_texoff.vp", diffuseTexOffset))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/rings.vp", ringIllum))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/ringshadow.vp", ringShadow))
-        return NULL;
-    if (!LoadNvVertexProgram("shaders/night.vp", nightLights))
-        return NULL;
-    // if (!LoadNvVertexProgram("shaders/comet.vp", cometTail))
-    //    return false;
-
-    // Two light shaders have only been written for the ARB vertex program path
-    // Fall back to the the one light versions.
-    diffuse_2light = diffuse;
-    diffuseHaze_2light = diffuseHaze;
-    diffuseTexOffset_2light = diffuseTexOffset;
-    specular_2light = specular;
-
-    everything = 0;
-    cout << _("All NV vertex programs loaded successfully.\n");
-
-    glTrackMatrixNV(GL_VERTEX_PROGRAM_NV,
-                         0, GL_MODELVIEW_PROJECTION_NV, GL_IDENTITY_NV);
-    glTrackMatrixNV(GL_VERTEX_PROGRAM_NV,
-                         4, GL_MODELVIEW_PROJECTION_NV, GL_INVERSE_TRANSPOSE_NV);
-
-    return new VertexProcessorNV();
-}
-
-
 VertexProcessor* vp::initARB()
 {
     cout << _("Initializing ARB vertex programs . . .\n");
@@ -297,7 +196,7 @@ VertexProcessor* vp::initARB()
 #endif
 
     // Load vertex programs that are only required with fragment programs
-    if (GLEW_NV_fragment_program || GLEW_ARB_fragment_program)
+    if (GLEW_ARB_fragment_program)
     {
         if (!LoadARBVertexProgram("shaders/multishadow_arb.vp", multiShadow))
             return NULL;
@@ -384,90 +283,6 @@ void VertexProcessor::parameter(vp::Parameter param, const Eigen::Vector4f& v)
 void VertexProcessor::parameter(vp::Parameter param, const Color& c)
 {
     parameter(param, c.red(), c.green(), c.blue(), c.alpha());
-}
-
-
-
-// VertexProcessorNV implementation
-
-static unsigned int parameterMappings[] =
-{
-    16, // LightDirection0
-    15, // EyePosition
-    20, // DiffuseColor0
-    34, // SpecularColor0
-    40, // SpecularExponent
-    32, // AmbientColor
-    33, // HazeColor
-    41, // TextureTranslation
-    90, // Constant0 - relevant for NV_vertex_program only
-     0, // Unused
-    41, // TexGen_S
-    42, // TexGen_T
-     0, // TexGen_S2
-     0, // TexGen_T2
-     0, // TexGen_S3
-     0, // TexGen_T3
-     0, // TexGen_S4
-     0, // TexGen_T4
-    50, // LightDirection1
-    51, // DiffuseColor1,
-    52, // SpecularColor1
-};
-
-VertexProcessorNV::VertexProcessorNV()
-{
-}
-
-VertexProcessorNV::~VertexProcessorNV()
-{
-}
-
-void VertexProcessorNV::enable()
-{
-    glEnable(GL_VERTEX_PROGRAM_NV);
-}
-
-void VertexProcessorNV::disable()
-{
-    glDisable(GL_VERTEX_PROGRAM_NV);
-}
-
-void VertexProcessorNV::use(unsigned int prog)
-{
-    glBindProgramNV(GL_VERTEX_PROGRAM_NV, prog);
-}
-
-void VertexProcessorNV::parameter(vp::Parameter param,
-                                  float x, float y, float z, float w)
-{
-    glProgramParameter4fNV(GL_VERTEX_PROGRAM_NV,
-                                parameterMappings[param], x, y, z, w);
-}
-
-void VertexProcessorNV::parameter(vp::Parameter param, const float* fv)
-{
-    glProgramParameter4fvNV(GL_VERTEX_PROGRAM_NV,
-                                 parameterMappings[param], fv);
-}
-
-void VertexProcessorNV::enableAttribArray(unsigned int index)
-{
-    glEnableClientState(GL_VERTEX_ATTRIB_ARRAY0_NV + index);
-}
-
-void VertexProcessorNV::disableAttribArray(unsigned int index)
-{
-    glDisableClientState(GL_VERTEX_ATTRIB_ARRAY0_NV + index);
-}
-
-void VertexProcessorNV::attribArray(unsigned int index,
-                                     int size,
-                                     GLenum type,
-                                     unsigned int stride,
-                                     const void* ptr)
-{
-    glVertexAttribPointerNV(index, size, type, stride, ptr);
 }
 
 
