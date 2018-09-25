@@ -108,7 +108,6 @@ bool GLContext::setRenderPath(GLRenderPath path)
     switch (path)
     {
     case GLPath_Basic:
-    case GLPath_Multitexture:
         vertexPath = VPath_Basic;
         break;
     case GLPath_GLSL:
@@ -130,10 +129,6 @@ bool GLContext::renderPathSupported(GLRenderPath path) const
     {
     case GLPath_Basic:
         return true;
-
-    case GLPath_Multitexture:
-        return (maxSimultaneousTextures > 1 &&
-               (GLEW_EXT_texture_env_combine || GLEW_ARB_texture_env_combine));
 
     case GLPath_GLSL:
         return GLEW_ARB_shader_objects &&
@@ -171,7 +166,7 @@ bool GLContext::extensionSupported(const string& ext) const
 
 bool GLContext::bumpMappingSupported() const
 {
-    return renderPath > GLPath_Multitexture;
+    return renderPath != GLPath_Basic;
 }
 
 
