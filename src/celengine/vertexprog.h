@@ -18,7 +18,6 @@ class VertexProcessor;
 
 namespace vp
 {
-    VertexProcessor* initNV();
     VertexProcessor* initARB();
     void enable();
     void disable();

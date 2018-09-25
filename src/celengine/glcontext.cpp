@@ -15,14 +15,12 @@
 using namespace std;
 
 
-static VertexProcessor* vpNV = NULL;
 static VertexProcessor* vpARB = NULL;
-static FragmentProcessor* fpNV = NULL;
 
 
 GLContext::GLContext() :
-    renderPath(GLPath_Basic),
-    vertexPath(VPath_Basic),
+    renderPath(GLPath_GLSL),
+    vertexPath(VPath_ARB),
     vertexProc(NULL),
     maxSimultaneousTextures(1)
 {
@@ -69,11 +67,8 @@ void GLContext::init(const vector<string>& ignoreExt)
         }
     }
 
-    if (GLEW_ARB_multitexture && glActiveTextureARB != NULL)
-    {
-        glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB,
-                      (GLint*) &maxSimultaneousTextures);
-    }
+    glGetIntegerv(GL_MAX_TEXTURE_UNITS,
+                  (GLint*) &maxSimultaneousTextures);
 
     if (GLEW_ARB_vertex_program && glGenProgramsARB)
     {
@@ -81,21 +76,6 @@ void GLContext::init(const vector<string>& ignoreExt)
         if (vpARB == NULL)
             vpARB = vp::initARB();
         vertexProc = vpARB;
-    }
-    else if (GLEW_NV_vertex_program && glGenProgramsNV)
-    {
-        DPRINTF(1, "Renderer: nVidia vertex programs supported.\n");
-        if (vpNV == NULL)
-            vpNV = vp::initNV();
-        vertexProc = vpNV;
-    }
-
-    if (GLEW_NV_fragment_program && glGenProgramsNV)
-    {
-        DPRINTF(1, "Renderer: nVidia fragment programs supported.\n");
-        if (fpNV == NULL)
-            fpNV = fp::initNV();
-        fragmentProc = fpNV;
     }
 }
 
@@ -107,18 +87,6 @@ bool GLContext::setRenderPath(GLRenderPath path)
 
     switch (path)
     {
-    case GLPath_Basic:
-    case GLPath_Multitexture:
-    case GLPath_NvCombiner:
-        vertexPath = VPath_Basic;
-        break;
-    case GLPath_NvCombiner_NvVP:
-        vertexPath = VPath_NV;
-        break;
-    case GLPath_DOT3_ARBVP:
-    case GLPath_NvCombiner_ARBVP:
-    case GLPath_ARBFP_ARBVP:
-    case GLPath_NV30:
     case GLPath_GLSL:
         vertexPath = VPath_ARB;
         break;
@@ -136,53 +104,8 @@ bool GLContext::renderPathSupported(GLRenderPath path) const
 {
     switch (path)
     {
-    case GLPath_Basic:
-        return true;
-
-    case GLPath_Multitexture:
-        return (maxSimultaneousTextures > 1 &&
-               (GLEW_EXT_texture_env_combine || GLEW_ARB_texture_env_combine));
-
-    case GLPath_NvCombiner:
-        return false;
-        /*
-        // No longer supported; all recent NVIDIA drivers also support
-        // the vertex_program extension, so the combiners-only path
-        // isn't necessary.
-        return GLEW_NV_register_combiners;
-        */
-
-    case GLPath_DOT3_ARBVP:
-        return GLEW_ARB_texture_env_dot3 &&
-               GLEW_ARB_vertex_program &&
-               vertexProc != NULL;
-
-    case GLPath_NvCombiner_NvVP:
-        // If ARB_vertex_program is supported, don't report support for
-        // this render path.
-        return GLEW_NV_register_combiners &&
-               GLEW_NV_vertex_program &&
-               !GLEW_ARB_vertex_program &&
-               vertexProc != NULL;
-
-    case GLPath_NvCombiner_ARBVP:
-        return GLEW_NV_register_combiners &&
-               GLEW_ARB_vertex_program &&
-               vertexProc != NULL;
-
-    case GLPath_ARBFP_ARBVP:
-        return false;
-        /*
-        return GLEW_ARB_vertex_program &&
-               GLEW_ARB_fragment_program &&
-               vertexProc != NULL;
-        */
-
     case GLPath_GLSL:
-        return GLEW_ARB_shader_objects &&
-               GLEW_ARB_shading_language_100 &&
-               GLEW_ARB_vertex_shader &&
-               GLEW_ARB_fragment_shader;
+        return GLEW_VERSION_2_0 != GL_FALSE;
 
     default:
         return false;
@@ -192,6 +115,7 @@ bool GLContext::renderPathSupported(GLRenderPath path) const
 
 GLContext::GLRenderPath GLContext::nextRenderPath()
 {
+#if 0
     GLContext::GLRenderPath newPath = renderPath;
 
     do {
@@ -203,6 +127,8 @@ GLContext::GLRenderPath GLContext::nextRenderPath()
     renderPath = newPath;
 
     return renderPath;
+#endif
+    return GLPath_GLSL;
 }
 
 
@@ -214,7 +140,7 @@ bool GLContext::extensionSupported(const string& ext) const
 
 bool GLContext::bumpMappingSupported() const
 {
-    return renderPath > GLPath_Multitexture;
+    return true;
 }
 
 
@@ -226,14 +152,5 @@ GLContext::VertexPath GLContext::getVertexPath() const
 
 VertexProcessor* GLContext::getVertexProcessor() const
 {
-    return vertexPath == VPath_Basic ? NULL : vertexProc;
-}
-
-
-FragmentProcessor* GLContext::getFragmentProcessor() const
-{
-    if (renderPath == GLPath_NV30 /* || renderPath == GLPath_ARGFP_ARBVP */ )
-        return fragmentProc;
-    else
-        return NULL;
+    return vertexProc;
 }

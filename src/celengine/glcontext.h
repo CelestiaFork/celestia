@@ -11,7 +11,6 @@
 #define _CELENGINE_GLCONTEXT_H_
 
 #include <celengine/vertexprog.h>
-#include <celengine/fragmentprog.h>
 #include <vector>
 #include <string>
 
@@ -23,21 +22,11 @@ class GLContext
 
     enum GLRenderPath
     {
-        GLPath_Basic             = 0,
-        GLPath_Multitexture      = 1,
-        GLPath_NvCombiner        = 2,
-        GLPath_DOT3_ARBVP        = 3,
-        GLPath_NvCombiner_NvVP   = 4,
-        GLPath_NvCombiner_ARBVP  = 5,
-        GLPath_ARBFP_ARBVP       = 6,
-        GLPath_NV30              = 7,
         GLPath_GLSL              = 8,
     };
 
     enum VertexPath
     {
-        VPath_Basic              = 0,
-        VPath_NV                 = 1,
         VPath_ARB                = 2,
     };
 
@@ -51,19 +40,17 @@ class GLContext
     bool extensionSupported(const std::string&) const;
 
     int getMaxTextures() const { return maxSimultaneousTextures; };
-    bool hasMultitexture() const { return renderPath >= GLPath_Multitexture; };
+    bool hasMultitexture() const { return true; };
     bool bumpMappingSupported() const;
 
     VertexPath getVertexPath() const;
 
     VertexProcessor* getVertexProcessor() const;
-    FragmentProcessor* getFragmentProcessor() const;
 
  private:
     GLRenderPath renderPath;
     VertexPath vertexPath;
     VertexProcessor* vertexProc;
-    FragmentProcessor* fragmentProc;
 
     int maxSimultaneousTextures;
     std::vector<std::string> extensions;

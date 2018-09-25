@@ -209,7 +209,6 @@ ENGINE_SOURCES = \
     src/celengine/dsoname.cpp \
     src/celengine/dsooctree.cpp \
     src/celengine/execution.cpp \
-    src/celengine/fragmentprog.cpp \
     src/celengine/frame.cpp \
     src/celengine/frametree.cpp \
     src/celengine/galaxy.cpp \
@@ -230,7 +229,6 @@ ENGINE_SOURCES = \
     src/celengine/parseobject.cpp \
     src/celengine/parser.cpp \
     src/celengine/planetgrid.cpp \
-    src/celengine/regcombine.cpp \
     src/celengine/rendcontext.cpp \
     src/celengine/render.cpp \
     src/celengine/renderglsl.cpp \
@@ -279,7 +277,6 @@ ENGINE_HEADERS = \
     src/celengine/dsooctree.h \
     src/celengine/execenv.h \
     src/celengine/execution.h \
-    src/celengine/fragmentprog.h \
     src/celengine/frame.h \
     src/celengine/frametree.h \
     src/celengine/galaxy.h \
@@ -304,7 +301,6 @@ ENGINE_HEADERS = \
     src/celengine/parser.h \
     src/celengine/planetgrid.h \
     src/celengine/referencemark.h \
-    src/celengine/regcombine.h \
     src/celengine/rendcontext.h \
     src/celengine/render.h \
     src/celengine/renderglsl.h \

@@ -1547,30 +1547,6 @@ void CelestiaCore::charEntered(const char *c_p, int modifiers)
             {
                 switch (newPath)
                 {
-                case GLContext::GLPath_Basic:
-                    flash(_("Render path: Basic"));
-                    break;
-                case GLContext::GLPath_Multitexture:
-                    flash(_("Render path: Multitexture"));
-                    break;
-                case GLContext::GLPath_NvCombiner:
-                    flash(_("Render path: NVIDIA combiners"));
-                    break;
-                case GLContext::GLPath_DOT3_ARBVP:
-                    flash(_("Render path: OpenGL vertex program"));
-                    break;
-                case GLContext::GLPath_NvCombiner_NvVP:
-                    flash(_("Render path: NVIDIA vertex program and combiners"));
-                    break;
-                case GLContext::GLPath_NvCombiner_ARBVP:
-                    flash(_("Render path: OpenGL vertex program/NVIDIA combiners"));
-                    break;
-                case GLContext::GLPath_ARBFP_ARBVP:
-                    flash(_("Render path: OpenGL 1.5 vertex/fragment program"));
-                    break;
-                case GLContext::GLPath_NV30:
-                    flash(_("Render path: NVIDIA GeForce FX"));
-                    break;
                 case GLContext::GLPath_GLSL:
                     flash(_("Render path: OpenGL 2.0"));
                     break;
@@ -2545,9 +2521,9 @@ void CelestiaCore::draw()
         glViewport(0, 0, width, height);
     }
 
-    GLboolean toggleAA = glIsEnabled(GL_MULTISAMPLE_ARB);
+    GLboolean toggleAA = glIsEnabled(GL_MULTISAMPLE);
     if (toggleAA && (renderer->getRenderFlags() & Renderer::ShowCloudMaps))
-        glDisable(GL_MULTISAMPLE_ARB);
+        glDisable(GL_MULTISAMPLE);
 
     renderOverlay();
     if (showConsole)
@@ -2561,7 +2537,7 @@ void CelestiaCore::draw()
     }
 
     if (toggleAA)
-        glEnable(GL_MULTISAMPLE_ARB);
+        glEnable(GL_MULTISAMPLE);
 
     if (movieCapture != NULL && recording)
         movieCapture->captureFrame();
@@ -4529,11 +4505,6 @@ bool CelestiaCore::initRenderer()
 
     context->init(config->ignoreGLExtensions);
     // Choose the render path, starting with the least desirable
-    context->setRenderPath(GLContext::GLPath_Basic);
-    context->setRenderPath(GLContext::GLPath_Multitexture);
-    context->setRenderPath(GLContext::GLPath_DOT3_ARBVP);
-    context->setRenderPath(GLContext::GLPath_NvCombiner_NvVP);
-    context->setRenderPath(GLContext::GLPath_NvCombiner_ARBVP);
     context->setRenderPath(GLContext::GLPath_GLSL);
     cout << _("render path: ") << context->getRenderPath() << '\n';
 

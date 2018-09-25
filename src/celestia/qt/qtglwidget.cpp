@@ -118,14 +118,11 @@ void CelestiaGlWidget::paintGL()
 }
 
 
-static GLContext::GLRenderPath getBestAvailableRenderPath(const GLContext& glc)
+static GLContext::GLRenderPath getBestAvailableRenderPath(const GLContext& /*glc*/)
 {
+#if 0
     const GLContext::GLRenderPath renderPaths[] = {
         GLContext::GLPath_GLSL,
-        GLContext::GLPath_NvCombiner_ARBVP,
-        GLContext::GLPath_DOT3_ARBVP,
-        GLContext::GLPath_Multitexture,
-        GLContext::GLPath_Basic,
     };
 
     for (unsigned i = 0; i < sizeof(renderPaths) / sizeof(renderPaths[0]); i++)
@@ -133,11 +130,9 @@ static GLContext::GLRenderPath getBestAvailableRenderPath(const GLContext& glc)
         if (glc.renderPathSupported(renderPaths[i]))
             return renderPaths[i];
     }
+#endif
 
-    // No supported render path? Something has gone very wrong...
-    assert(glc.renderPathSupported(GLContext::GLPath_Basic));
-
-    return GLContext::GLPath_Basic;
+    return GLContext::GLPath_GLSL;
 }
 
 

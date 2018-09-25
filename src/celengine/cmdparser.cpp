@@ -700,19 +700,11 @@ Command* CommandParser::parseCommand()
     }
     else if (commandName == "renderpath")
     {
-        GLContext::GLRenderPath glcpath = GLContext::GLPath_Basic;
+        GLContext::GLRenderPath glcpath = GLContext::GLPath_GLSL;
         string path;
         paramList->getString("path", path);
 
-        if (compareIgnoringCase(path, "basic") == 0)
-            glcpath = GLContext::GLPath_Basic;
-        else if (compareIgnoringCase(path, "multitexture") == 0)
-            glcpath = GLContext::GLPath_Multitexture;
-        else if (compareIgnoringCase(path, "vp") == 0)
-            glcpath = GLContext::GLPath_DOT3_ARBVP;
-        else if (compareIgnoringCase(path, "vp-nv") == 0)
-            glcpath = GLContext::GLPath_NvCombiner_ARBVP;
-        else if (compareIgnoringCase(path, "glsl") == 0)
+        if (compareIgnoringCase(path, "glsl") == 0)
             glcpath = GLContext::GLPath_GLSL;
 
         cmd = new CommandRenderPath(glcpath);

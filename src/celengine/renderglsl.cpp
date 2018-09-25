@@ -28,7 +28,6 @@
 #include "spheremesh.h"
 #include "lodspheremesh.h"
 #include "geometry.h"
-#include "regcombine.h"
 #include "vertexprog.h"
 #include "texmanager.h"
 #include "meshmanager.h"
@@ -171,9 +170,9 @@ void renderEllipsoid_GLSL(const RenderInfo& ri,
             {
                 shadprop.texUsage |= ShaderProperties::CloudShadowTexture;
                 textures[nTextures++] = cloudTex;
-                glActiveTextureARB(GL_TEXTURE0_ARB + nTextures);
+                glActiveTexture(GL_TEXTURE0 + nTextures);
                 cloudTex->bind();
-                glActiveTextureARB(GL_TEXTURE0_ARB);
+                glActiveTexture(GL_TEXTURE0);
 
                 for (unsigned int lightIndex = 0; lightIndex < ls.nLights; lightIndex++)
                 {
@@ -207,7 +206,7 @@ void renderEllipsoid_GLSL(const RenderInfo& ri,
         Texture* ringsTex = ls.shadowingRingSystem->texture.find(textureRes);
         if (ringsTex != NULL)
         {
-            glActiveTextureARB(GL_TEXTURE0_ARB + nTextures);
+            glActiveTexture(GL_TEXTURE0 + nTextures);
             ringsTex->bind();
             nTextures++;
 
@@ -215,8 +214,8 @@ void renderEllipsoid_GLSL(const RenderInfo& ri,
             // a zero alpha.
             float bc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER_ARB);
-            glActiveTextureARB(GL_TEXTURE0_ARB);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+            glActiveTexture(GL_TEXTURE0);
 
             shadprop.texUsage |= ShaderProperties::RingShadowTexture;
 
@@ -293,7 +292,7 @@ void renderEllipsoid_GLSL(const RenderInfo& ri,
                         frustum, ri.pixWidth,
                         textures[0], textures[1], textures[2], textures[3]);
 
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 }
 
 
@@ -347,7 +346,7 @@ void renderGeometry_GLSL(Geometry* geometry,
         geometry->render(rc, tsec);
     }
 
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 }
 
 
@@ -390,7 +389,7 @@ void renderGeometry_GLSL_Unlit(Geometry* geometry,
         geometry->render(rc, tsec);
     }
 
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 }
 
 
@@ -440,7 +439,7 @@ void renderClouds_GLSL(const RenderInfo& ri,
         Texture* ringsTex = rings->texture.find(textureRes);
         if (ringsTex != NULL)
         {
-            glActiveTextureARB(GL_TEXTURE0_ARB + nTextures);
+            glActiveTexture(GL_TEXTURE0 + nTextures);
             ringsTex->bind();
             nTextures++;
 
@@ -449,8 +448,8 @@ void renderClouds_GLSL(const RenderInfo& ri,
             float bc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                            GL_CLAMP_TO_BORDER_ARB);
-            glActiveTextureARB(GL_TEXTURE0_ARB);
+                            GL_CLAMP_TO_BORDER);
+            glActiveTexture(GL_TEXTURE0);
 
             shadprop.texUsage |= ShaderProperties::RingShadowTexture;
         }
@@ -527,7 +526,7 @@ void renderClouds_GLSL(const RenderInfo& ri,
 
     prog->textureOffset = 0.0f;
 
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 }
 
 
@@ -596,9 +595,9 @@ renderAtmosphere_GLSL(const RenderInfo& ri,
     glPopMatrix();
 
 
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 
-    //glActiveTextureARB(GL_TEXTURE0_ARB);
+    //glActiveTexture(GL_TEXTURE0);
     //glEnable(GL_TEXTURE_2D);
 }
 
@@ -803,7 +802,7 @@ void renderRings_GLSL(RingSystem& rings,
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 }
 
 
@@ -845,7 +844,7 @@ void renderGeometryShadow_GLSL(Geometry* geometry,
     /*Vector3f rightDir = */upDir.cross(viewDir);
 
 
-    glUseProgramObjectARB(0);
+    glUseProgram(0);
 
     geometry->render(rc, tsec);
 

@@ -19,7 +19,6 @@ class FragmentProcessor;
 
 namespace fp
 {
-    FragmentProcessor* initNV();
     FragmentProcessor* initARB();
     void enable();
     void disable();
