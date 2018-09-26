@@ -118,13 +118,13 @@ void CelestiaGlWidget::paintGL()
 }
 
 
-static GLContext::GLRenderPath getBestAvailableRenderPath(const GLContext& glc)
+static GLContext::GLRenderPath getBestAvailableRenderPath(const GLContext& /*glc*/)
 {
+#if 0
     const GLContext::GLRenderPath renderPaths[] = {
         GLContext::GLPath_GLSL,
     };
 
-#if 0
     for (unsigned i = 0; i < sizeof(renderPaths) / sizeof(renderPaths[0]); i++)
     {
         if (glc.renderPathSupported(renderPaths[i]))
