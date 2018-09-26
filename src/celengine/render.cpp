@@ -4840,7 +4840,7 @@ static void setupBumpTexenvAmbient(Color ambientColor)
     // The primary color contains the light direction in surface
     // space, and texture0 is a normal map.  The lighting is
     // calculated by computing the dot product.
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0);
     glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_DOT3_RGB_ARB);
     glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT, GL_PRIMARY_COLOR_EXT);
     glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_EXT, GL_SRC_COLOR);
@@ -4848,7 +4848,7 @@ static void setupBumpTexenvAmbient(Color ambientColor)
     glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_EXT, GL_SRC_COLOR);
 
     // Add in the ambient color
-    glActiveTextureARB(GL_TEXTURE1_ARB);
+    glActiveTexture(GL_TEXTURE1);
     glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, texenvConst);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
     glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_ADD);
@@ -4860,7 +4860,7 @@ static void setupBumpTexenvAmbient(Color ambientColor)
 
     // In the final stage, modulate the lighting value by the
     // base texture color.
-    glActiveTextureARB(GL_TEXTURE2_ARB);
+    glActiveTexture(GL_TEXTURE2);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
     glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_MODULATE);
     glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT, GL_PREVIOUS_EXT);
@@ -4869,7 +4869,7 @@ static void setupBumpTexenvAmbient(Color ambientColor)
     glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_EXT, GL_SRC_COLOR);
     glEnable(GL_TEXTURE_2D);
 
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0);
 }
 #endif
 
@@ -5664,12 +5664,12 @@ void Renderer::renderObject(const Vector3f& pos,
 
                 for (unsigned int i = 1; i < 8;/*context->getMaxTextures();*/ i++)
                 {
-                    glActiveTextureARB(GL_TEXTURE0_ARB + i);
+                    glActiveTexture(GL_TEXTURE0 + i);
                     glDisable(GL_TEXTURE_2D);
                 }
-                glActiveTextureARB(GL_TEXTURE0_ARB);
+                glActiveTexture(GL_TEXTURE0);
                 glEnable(GL_TEXTURE_2D);
-                glUseProgramObjectARB(0);
+                glUseProgram(0);
             }
             else
             {
@@ -6570,7 +6570,7 @@ void Renderer::renderCometTail(const Body& body,
     glPushMatrix();
     glTranslate(pos);
 
-    // glActiveTextureARB(GL_TEXTURE0_ARB);
+    // glActiveTexture(GL_TEXTURE0);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
     glDepthMask(GL_FALSE);

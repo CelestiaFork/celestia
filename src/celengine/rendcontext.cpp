@@ -183,7 +183,7 @@ RenderContext::drawGroup(const Mesh::PrimitiveGroup& group)
     if (group.prim == Mesh::SpriteList)
     {
         glEnable(GL_POINT_SPRITE_ARB);
-        glActiveTextureARB(GL_TEXTURE0_ARB);
+        glActiveTexture(GL_TEXTURE0);
         glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     }
@@ -697,7 +697,7 @@ GLSL_RenderContext::makeCurrent(const Material& m)
         Texture* ringsTex = lightingState.shadowingRingSystem->texture.find(medres);
         if (ringsTex != NULL)
         {
-            glActiveTextureARB(GL_TEXTURE0_ARB + nTextures);
+            glActiveTexture(GL_TEXTURE0 + nTextures);
             ringsTex->bind();
             textures[nTextures++] = ringsTex;
 
@@ -706,7 +706,7 @@ GLSL_RenderContext::makeCurrent(const Material& m)
             float bc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER_ARB);
-            glActiveTextureARB(GL_TEXTURE0_ARB);
+            glActiveTexture(GL_TEXTURE0);
 
             shaderProps.texUsage |= ShaderProperties::RingShadowTexture;
             for (unsigned int lightIndex = 0; lightIndex < lightingState.nLights; lightIndex++)
@@ -745,7 +745,7 @@ GLSL_RenderContext::makeCurrent(const Material& m)
 
     for (unsigned int i = 0; i < nTextures; i++)
     {
-        glActiveTextureARB(GL_TEXTURE0_ARB + i);
+        glActiveTexture(GL_TEXTURE0 + i);
         glEnable(GL_TEXTURE_2D);
         textures[i]->bind();
     }
@@ -958,7 +958,7 @@ GLSLUnlit_RenderContext::makeCurrent(const Material& m)
 
     for (unsigned int i = 0; i < nTextures; i++)
     {
-        glActiveTextureARB(GL_TEXTURE0_ARB + i);
+        glActiveTexture(GL_TEXTURE0 + i);
         glEnable(GL_TEXTURE_2D);
         textures[i]->bind();
     }

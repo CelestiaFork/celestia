@@ -249,7 +249,7 @@ void LODSphereMesh::render(const GLContext& context,
         textures[i] = tex[i];
         subtextures[i] = 0;
         if (nTextures > 1)
-            glActiveTextureARB(GL_TEXTURE0_ARB + i);
+            glActiveTexture(GL_TEXTURE0 + i);
         glEnable(GL_TEXTURE_2D);
     }
 
@@ -261,22 +261,22 @@ void LODSphereMesh::render(const GLContext& context,
         // would only cause problems if we rendered in two different contexts
         // and only one had vertex buffer objects.
         vertexBuffersInitialized = true;
-        if (GLEW_ARB_vertex_buffer_object)
+        if (true)
         {
             for (int i = 0; i < NUM_SPHERE_VERTEX_BUFFERS; i++)
             {
                 GLuint vbname = 0;
-                glGenBuffersARB(1, &vbname);
+                glGenBuffers(1, &vbname);
                 vertexBuffers[i] = (unsigned int) vbname;
-                glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBuffers[i]);
-                glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+                glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[i]);
+                glBufferData(GL_ARRAY_BUFFER,
                                      maxVertices * MaxVertexSize * sizeof(float),
                                      NULL,
-                                     GL_STREAM_DRAW_ARB);
+                                     GL_STREAM_DRAW);
             }
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glGenBuffersARB(1, &indexBuffer);
+            glGenBuffers(1, &indexBuffer);
 
             useVertexBuffers = true;
 
@@ -290,7 +290,7 @@ void LODSphereMesh::render(const GLContext& context,
     if (useVertexBuffers)
     {
         currentVB = 0;
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBuffers[currentVB]);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[currentVB]);
     }
 
     // Set up the mesh vertices
@@ -310,11 +310,11 @@ void LODSphereMesh::render(const GLContext& context,
 
     if (useVertexBuffers)
     {
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indexBuffer);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB,
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                              nIndices * sizeof(indices[0]),
                              indices,
-                             GL_DYNAMIC_DRAW_ARB);
+                             GL_DYNAMIC_DRAW);
     }
 
     // Compute the size of a vertex
@@ -331,7 +331,7 @@ void LODSphereMesh::render(const GLContext& context,
     for (i = 0; i < nTextures; i++)
     {
         if (nTextures > 1)
-            glClientActiveTextureARB(GL_TEXTURE0_ARB + i);
+            glClientActiveTexture(GL_TEXTURE0 + i);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     }
 
@@ -420,8 +420,8 @@ void LODSphereMesh::render(const GLContext& context,
 
         if (nTextures > 1)
         {
-            glClientActiveTextureARB(GL_TEXTURE0_ARB + i);
-            glActiveTextureARB(GL_TEXTURE0_ARB + i);
+            glClientActiveTexture(GL_TEXTURE0 + i);
+            glActiveTexture(GL_TEXTURE0 + i);
         }
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         if (i > 0)
@@ -430,14 +430,14 @@ void LODSphereMesh::render(const GLContext& context,
 
     if (nTextures > 1)
     {
-        glClientActiveTextureARB(GL_TEXTURE0_ARB);
-        glActiveTextureARB(GL_TEXTURE0_ARB);
+        glClientActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
     }
 
     if (useVertexBuffers)
     {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         vertices = NULL;
     }
 
@@ -654,7 +654,7 @@ void LODSphereMesh::renderSection(int phi0, int theta0, int extent,
     for (int tc = 0; tc < nTexturesUsed; tc++)
     {
         if (nTexturesUsed > 1)
-            glClientActiveTextureARB(GL_TEXTURE0_ARB + tc);
+            glClientActiveTexture(GL_TEXTURE0 + tc);
         glTexCoordPointer(2, GL_FLOAT, stride,  vertexBase + (tc * 2) + texCoordOffset);
     }
 
@@ -683,16 +683,16 @@ void LODSphereMesh::renderSection(int phi0, int theta0, int extent,
 
     if (useVertexBuffers)
     {
-        // Calling glBufferDataARB() with NULL before mapping the buffer
+        // Calling glBufferData() with NULL before mapping the buffer
         // is a hint to OpenGL that previous contents of vertex buffer will
         // be discarded and overwritten. It enables renaming in the driver,
         // hopefully resulting in performance gains.
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB,
+        glBufferData(GL_ARRAY_BUFFER,
                              maxVertices * vertexSize * sizeof(float),
                              NULL,
-                             GL_STREAM_DRAW_ARB);
+                             GL_STREAM_DRAW);
 
-        vertices = reinterpret_cast<float*>(glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB));
+        vertices = reinterpret_cast<float*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
         if (vertices == NULL)
             return;
     }
@@ -731,7 +731,7 @@ void LODSphereMesh::renderSection(int phi0, int theta0, int extent,
             v /= patchesPerVSubtex;
 
             if (nTexturesUsed > 1)
-                glActiveTextureARB(GL_TEXTURE0_ARB + tex);
+                glActiveTexture(GL_TEXTURE0 + tex);
             TextureTile tile = textures[tex]->getTile(ri.texLOD[tex],
                                                       uTexSplit - u - 1,
                                                       vTexSplit - v - 1);
@@ -808,7 +808,7 @@ void LODSphereMesh::renderSection(int phi0, int theta0, int extent,
     if (useVertexBuffers)
     {
         vertices = NULL;
-        if (!glUnmapBufferARB(GL_ARRAY_BUFFER_ARB))
+        if (!glUnmapBuffer(GL_ARRAY_BUFFER))
             return;
     }
 
@@ -831,6 +831,6 @@ void LODSphereMesh::renderSection(int phi0, int theta0, int extent,
         currentVB++;
         if (currentVB == NUM_SPHERE_VERTEX_BUFFERS)
             currentVB = 0;
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, vertexBuffers[currentVB]);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[currentVB]);
     }
 }
