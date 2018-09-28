@@ -470,8 +470,8 @@ void PointStarVertexBuffer::startSprites(const GLContext& _context)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
 
-    glEnable(GL_POINT_SPRITE_ARB);
-    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+    glEnable(GL_POINT_SPRITE);
+    glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 
     useSprites = true;
 }
@@ -506,12 +506,12 @@ void PointStarVertexBuffer::render()
         unsigned int stride = sizeof(StarVertex);
         if (useSprites)
         {
-            glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+            glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
             glEnable(GL_TEXTURE_2D);
         }
         else
         {
-            glDisable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+            glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
             glDisable(GL_TEXTURE_2D);
             glPointSize(1.0f);
         }
@@ -544,7 +544,7 @@ void PointStarVertexBuffer::finish()
         vproc->disableAttribArray(6);
         vproc->disable();
 
-        glDisable(GL_POINT_SPRITE_ARB);
+        glDisable(GL_POINT_SPRITE);
     }
     else
     {
@@ -4360,8 +4360,8 @@ void Renderer::renderObjectAsPoint(const Vector3f& position,
         }
 #else
         // Disabled because of point size limits
-        glEnable(GL_POINT_SPRITE_ARB);
-        glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+        glEnable(GL_POINT_SPRITE);
+        glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 
         gaussianDiscTex->bind();
         glColor(color, alpha);
@@ -4387,7 +4387,7 @@ void Renderer::renderObjectAsPoint(const Vector3f& position,
             glEnd();
         }
 
-        glDisable(GL_POINT_SPRITE_ARB);
+        glDisable(GL_POINT_SPRITE);
         glDisable(GL_DEPTH_TEST);
 #endif // NO_MAX_POINT_SIZE
     }
@@ -4998,7 +4998,7 @@ renderRingShadowsVS(Geometry* /*geometry*/,           //TODO: Remove unused para
     // the top and bottom of the ring textures . . . maybe later.
     float bc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER_ARB);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 
     // Ring shadows look strange if they're always completely black.  Vary
     // the darkness of the shadow based on the angle between the sun and the

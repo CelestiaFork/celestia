@@ -245,7 +245,7 @@ static GLenum GetGLTexAddressMode(Texture::AddressMode addressMode)
 
     case Texture::BorderClamp:
         if (caps.clampToBorderSupported)
-            return GL_CLAMP_TO_BORDER_ARB;
+            return GL_CLAMP_TO_BORDER;
         else
             return caps.clampToEdgeSupported ? GL_CLAMP_TO_EDGE : GL_CLAMP;
     }

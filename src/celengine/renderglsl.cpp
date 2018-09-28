@@ -214,7 +214,7 @@ void renderEllipsoid_GLSL(const RenderInfo& ri,
             // a zero alpha.
             float bc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER_ARB);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
             glActiveTexture(GL_TEXTURE0);
 
             shadprop.texUsage |= ShaderProperties::RingShadowTexture;
@@ -448,7 +448,7 @@ void renderClouds_GLSL(const RenderInfo& ri,
             float bc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
             glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                            GL_CLAMP_TO_BORDER_ARB);
+                            GL_CLAMP_TO_BORDER);
             glActiveTexture(GL_TEXTURE0);
 
             shadprop.texUsage |= ShaderProperties::RingShadowTexture;
