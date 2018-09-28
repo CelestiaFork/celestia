@@ -24,6 +24,7 @@ using namespace Eigen;
 using namespace std;
 
 // GLSL on Mac OS X appears to have a bug that precludes us from using structs
+// Another bug: red Earth's and Mars' atmospheres
 // #define USE_GLSL_STRUCTS
 #define POINT_FADE 0
 
@@ -904,9 +905,9 @@ DeclareLights(const ShaderProperties& props)
     if (props.nLights == 0)
         return string("");
 
-#ifndef USE_GLSL_STRUCTS
     ostringstream stream;
 
+#ifndef USE_GLSL_STRUCTS
     for (unsigned int i = 0; i < props.nLights; i++)
     {
         stream << "uniform vec3 light" << i << "_direction;\n";
@@ -919,7 +920,6 @@ DeclareLights(const ShaderProperties& props)
         if (props.texUsage & ShaderProperties::NightTexture)
             stream << "uniform float light" << i << "_brightness;\n";
     }
-
 #else
     stream << "uniform struct {\n";
     stream << "   vec3 direction;\n";
@@ -928,7 +928,9 @@ DeclareLights(const ShaderProperties& props)
     stream << "   vec3 halfVector;\n";
     if (props.texUsage & ShaderProperties::NightTexture)
         stream << "   float brightness;\n";
-    stream << "} lights[%d];\n";
+    char buf[32];
+    snprintf(buf, 31, "} lights[%d];\n", props.nLights);
+    stream << buf;
 #endif
 
     return stream.str();
@@ -3025,28 +3027,25 @@ ShaderManager::buildProgram(const ShaderProperties& props)
     GLVertexShader* vs = NULL;
     GLFragmentShader* fs = NULL;
 
-    if (props.lightModel == ShaderProperties::RingIllumModel)
+    switch (props.lightModel)
     {
+    case ShaderProperties::RingIllumModel:
         vs = buildRingsVertexShader(props);
         fs = buildRingsFragmentShader(props);
-    }
-    else if (props.lightModel == ShaderProperties::AtmosphereModel)
-    {
+        break;
+    case ShaderProperties::AtmosphereModel:
         vs = buildAtmosphereVertexShader(props);
         fs = buildAtmosphereFragmentShader(props);
-    }
-    else if (props.lightModel == ShaderProperties::EmissiveModel)
-    {
+        break;
+    case ShaderProperties::EmissiveModel:
         vs = buildEmissiveVertexShader(props);
         fs = buildEmissiveFragmentShader(props);
-    }
-    else if (props.lightModel == ShaderProperties::ParticleModel)
-    {
+        break;
+    case ShaderProperties::ParticleModel:
         vs = buildParticleVertexShader(props);
         fs = buildParticleFragmentShader(props);
-    }
-    else
-    {
+        break;
+    default:
         vs = buildVertexShader(props);
         fs = buildFragmentShader(props);
     }
