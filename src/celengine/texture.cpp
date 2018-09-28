@@ -780,12 +780,12 @@ CubeMap::CubeMap(Image* faces[]) :
         mipmap = false;
 
     glGenTextures(1, (GLuint*) &glName);
-    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, glName);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, glName);
 
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER,
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER,
                     mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 
     int internalFormat = getInternalFormat(format);
@@ -828,7 +828,7 @@ CubeMap::~CubeMap()
 
 void CubeMap::bind()
 {
-    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, glName);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, glName);
 }
 
 
@@ -844,7 +844,7 @@ const TextureTile CubeMap::getTile(int lod, int u, int v)
 void CubeMap::setBorderColor(Color borderColor)
 {
     bind();
-    SetBorderColor(borderColor, GL_TEXTURE_CUBE_MAP_ARB);
+    SetBorderColor(borderColor, GL_TEXTURE_CUBE_MAP);
 }
 
 

@@ -67,11 +67,8 @@ void GLContext::init(const vector<string>& ignoreExt)
         }
     }
 
-    if (GLEW_ARB_multitexture && glActiveTextureARB != NULL)
-    {
-        glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB,
-                      (GLint*) &maxSimultaneousTextures);
-    }
+    glGetIntegerv(GL_MAX_TEXTURE_UNITS,
+                  (GLint*) &maxSimultaneousTextures);
 
     if (GLEW_ARB_vertex_program && glGenProgramsARB)
     {

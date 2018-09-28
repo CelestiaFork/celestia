@@ -1081,14 +1081,8 @@ bool Renderer::init(GLContext* _context,
         // supported, which solves the problem much more elegantly than all
         // the mipmap level nonsense.
         // shadowTex->setMaxMipMapLevel(3);
-        Texture::AddressMode shadowTexAddress = Texture::EdgeClamp;
-        Texture::MipMapMode shadowTexMip = Texture::NoMipMaps;
-        useClampToBorder = (GLEW_ARB_texture_border_clamp == GL_TRUE);
-        if (useClampToBorder)
-        {
-            shadowTexAddress = Texture::BorderClamp;
-            shadowTexMip = Texture::DefaultMipMaps;
-        }
+        Texture::AddressMode shadowTexAddress = Texture::BorderClamp;
+        Texture::MipMapMode shadowTexMip = Texture::DefaultMipMaps;
 
         shadowTex = CreateProceduralTexture(detailOptions.shadowTextureSize,
                                             detailOptions.shadowTextureSize,
@@ -1165,14 +1159,14 @@ bool Renderer::init(GLContext* _context,
     {
         int nSamples = 0;
         int sampleBuffers = 0;
-        int enabled = (int) glIsEnabled(GL_MULTISAMPLE_ARB);
-        glGetIntegerv(GL_SAMPLE_BUFFERS_ARB, &sampleBuffers);
-        glGetIntegerv(GL_SAMPLES_ARB, &nSamples);
+        int enabled = (int) glIsEnabled(GL_MULTISAMPLE);
+        glGetIntegerv(GL_SAMPLE_BUFFERS, &sampleBuffers);
+        glGetIntegerv(GL_SAMPLES, &nSamples);
         clog << "AA samples: " << nSamples
              << ", enabled=" << (int) enabled
              << ", sample buffers=" << (sampleBuffers)
              << "\n";
-        glEnable(GL_MULTISAMPLE_ARB);
+        glEnable(GL_MULTISAMPLE);
     }
 #endif
 
@@ -3330,9 +3324,9 @@ void Renderer::draw(const Observer& observer,
     if ((renderFlags & ShowStars) != 0 && universe.getStarCatalog() != NULL)
     {
         // Disable multisample rendering when drawing point stars
-        bool toggleAA = (starStyle == Renderer::PointStars && glIsEnabled(GL_MULTISAMPLE_ARB));
+        bool toggleAA = (starStyle == Renderer::PointStars && glIsEnabled(GL_MULTISAMPLE));
         if (toggleAA)
-            glDisable(GL_MULTISAMPLE_ARB);
+            glDisable(GL_MULTISAMPLE);
 
         if (useNewStarRendering)
             renderPointStars(*universe.getStarCatalog(), faintestMag, observer);
@@ -3340,7 +3334,7 @@ void Renderer::draw(const Observer& observer,
             renderStars(*universe.getStarCatalog(), faintestMag, observer);
 
         if (toggleAA)
-            glEnable(GL_MULTISAMPLE_ARB);
+            glEnable(GL_MULTISAMPLE);
     }
 
 #ifdef USE_HDR
@@ -5860,8 +5854,7 @@ void Renderer::renderObject(const Vector3f& pos,
             ringsTex->bind();
 
 #if 0
-            if (useClampToBorder &&
-                context->getRenderPath() != GLContext::GLPath_GLSL)
+            if (context->getRenderPath() != GLContext::GLPath_GLSL)
             {
                 renderRingShadowsVS(geometry,
                                     *obj.rings,
