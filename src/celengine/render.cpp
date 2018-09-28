@@ -603,8 +603,6 @@ Renderer::Renderer() :
     pointStarVertexBuffer(NULL),
     glareVertexBuffer(NULL),
     useVertexPrograms(false),
-    useRescaleNormal(false),
-    usePointSprite(false),
     textureResolution(medres),
     useNewStarRendering(false),
     frameCount(0),
@@ -617,7 +615,6 @@ Renderer::Renderer() :
 #ifdef USE_HDR
     sceneTexture(0),
     blurFormat(GL_RGBA),
-    useBlendSubtract(true),
     useLuminanceAlpha(false),
     bloomEnabled(true),
     maxBodyMag(100.0f),
@@ -1127,13 +1124,10 @@ bool Renderer::init(GLContext* _context,
                                                           PenumbraFunctionEval,
                                                           Texture::EdgeClamp);
 
-        if (GLEW_ARB_texture_cube_map)
-        {
-            normalizationTex = CreateProceduralCubeMap(64, GL_RGB, IllumMapEval);
+         normalizationTex = CreateProceduralCubeMap(64, GL_RGB, IllumMapEval);
 #if ADVANCED_CLOUD_SHADOWS
-            rectToSphericalTexture = CreateProceduralCubeMap(128, GL_RGBA, RectToSphericalMapEval);
+         rectToSphericalTexture = CreateProceduralCubeMap(128, GL_RGBA, RectToSphericalMapEval);
 #endif
-        }
 
 #ifdef USE_HDR
         genSceneTexture();
@@ -1155,43 +1149,23 @@ bool Renderer::init(GLContext* _context,
     }
 
 #if 0
-    if (GLEW_ARB_multisample)
-    {
-        int nSamples = 0;
-        int sampleBuffers = 0;
-        int enabled = (int) glIsEnabled(GL_MULTISAMPLE);
-        glGetIntegerv(GL_SAMPLE_BUFFERS, &sampleBuffers);
-        glGetIntegerv(GL_SAMPLES, &nSamples);
-        clog << "AA samples: " << nSamples
-             << ", enabled=" << (int) enabled
-             << ", sample buffers=" << (sampleBuffers)
-             << "\n";
-        glEnable(GL_MULTISAMPLE);
-    }
+    int nSamples = 0;
+    int sampleBuffers = 0;
+    int enabled = (int) glIsEnabled(GL_MULTISAMPLE);
+    glGetIntegerv(GL_SAMPLE_BUFFERS, &sampleBuffers);
+    glGetIntegerv(GL_SAMPLES, &nSamples);
+    clog << "AA samples: " << nSamples
+         << ", enabled=" << (int) enabled
+         << ", sample buffers=" << (sampleBuffers)
+         << "\n";
+    glEnable(GL_MULTISAMPLE);
 #endif
 
-    if (GLEW_EXT_rescale_normal)
-    {
-        // We need this enabled because we use glScale, but only
-        // with uniform scale factors.
-        DPRINTF(1, "Renderer: EXT_rescale_normal supported.\n");
-        useRescaleNormal = true;
-        glEnable(GL_RESCALE_NORMAL_EXT);
-    }
+    glEnable(GL_RESCALE_NORMAL_EXT);
 
-    if (GLEW_ARB_point_sprite)
-    {
-        DPRINTF(1, "Renderer: point sprites supported.\n");
-        usePointSprite = true;
-    }
-
-    if (GLEW_EXT_separate_specular_color)
-    {
-        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL_EXT, GL_SEPARATE_SPECULAR_COLOR_EXT);
-    }
+    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL_EXT, GL_SEPARATE_SPECULAR_COLOR_EXT);
 
 #ifdef USE_HDR
-    useBlendSubtract = GLEW_EXT_blend_subtract;
     Image        *testImg = new Image(GL_LUMINANCE_ALPHA, 1, 1);
     ImageTexture *testTex = new ImageTexture(*testImg,
                                              Texture::EdgeClamp,
@@ -2322,150 +2296,112 @@ void Renderer::renderToBlurTexture(int blurLevel)
     glViewport(0, 0, blurDrawWidth, blurDrawHeight);
     glBindTexture(GL_TEXTURE_2D, sceneTexture);
 
-    if (useBlendSubtract)
+#ifdef UseOpenGL
+    glBegin(GL_QUADS);
+    drawBlendedVertices(0.0f, 0.0f, 1.0f);
+    glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    drawBlendedVertices(0.0f, 0.0f, 1.0f);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
+    // Do not need to scale alpha so mask it off
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+    glEnable(GL_BLEND);
+    savedWScale = sceneTexWScale;
+    savedHScale = sceneTexHScale;
+
+    // Remove ldr part of image
     {
+    const GLfloat bias  = -0.5f;
+    glBlendFunc(GL_ONE, GL_ONE);
+    glBlendEquationEXT(GL_FUNC_REVERSE_SUBTRACT_EXT);
+    glColor4f(-bias, -bias, -bias, 0.0f);
+
+    glDisable(GL_TEXTURE_2D);
+#ifdef UseOpenGL
+    glBegin(GL_QUADS);
+    glVertex2f(0.0f, 0.0f);
+    glVertex2f(1.f,  0.0f);
+    glVertex2f(1.f,  1.f);
+    glVertex2f(0.0f, 1.f);
+    glEnd();
+#else
+    GLshort vtx1[] = { 0, 0,  1, 0,  1, 1,  0, 1 };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, vtx1);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+#endif
+
+    glEnable(GL_TEXTURE_2D);
+    blurTextures[blurLevel]->bind();
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
+                     blurTexWidth, blurTexHeight, 0);
+    }
+
+    // Scale back up hdr part
+    {
+    glBlendEquationEXT(GL_FUNC_ADD_EXT);
+    glBlendFunc(GL_DST_COLOR, GL_ONE);
+
+#ifdef UseOpenGL
+    glBegin(GL_QUADS);
+    drawBlendedVertices(0.f, 0.f, 1.f); //x2
+    drawBlendedVertices(0.f, 0.f, 1.f); //x2
+    glEnd();
+#else
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
+    drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
+    }
+
+    glDisable(GL_BLEND);
+
+    if (!useLuminanceAlpha)
+    {
+        blurTempTexture->bind();
+        glCopyTexImage2D(GL_TEXTURE_2D, blurLevel, GL_LUMINANCE, 0, 0,
+                         blurTexWidth, blurTexHeight, 0);
+        // Erase color, replace with luminance image
 #ifdef UseOpenGL
         glBegin(GL_QUADS);
-        drawBlendedVertices(0.0f, 0.0f, 1.0f);
+        glColor4f(0.f, 0.f, 0.f, 1.f);
+        glVertex2f(0.0f, 0.0f);
+        glVertex2f(1.0f, 0.0f);
+        glVertex2f(1.0f, 1.0f);
+        glVertex2f(0.0f, 1.0f);
+        glEnd();
+        glBegin(GL_QUADS);
+        drawBlendedVertices(0.f, 0.f, 1.f);
         glEnd();
 #else
+        glColor4f(0.f, 0.f, 0.f, 1.f);
+        GLshort vtx1[] = { 0, 0,  1, 0,  1, 1,  0, 1 };
         glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, vtx1);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+//        glDisableClientState(GL_VERTEX_ARRAY);
+
+//        glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         drawBlendedVertices(0.0f, 0.0f, 1.0f);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
-        // Do not need to scale alpha so mask it off
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-        glEnable(GL_BLEND);
-        savedWScale = sceneTexWScale;
-        savedHScale = sceneTexHScale;
-
-        // Remove ldr part of image
-        {
-            const GLfloat bias  = -0.5f;
-            glBlendFunc(GL_ONE, GL_ONE);
-            glBlendEquationEXT(GL_FUNC_REVERSE_SUBTRACT_EXT);
-            glColor4f(-bias, -bias, -bias, 0.0f);
-
-            glDisable(GL_TEXTURE_2D);
-#ifdef UseOpenGL
-            glBegin(GL_QUADS);
-            glVertex2f(0.0f,           0.0f);
-            glVertex2f(1.f, 0.0f);
-            glVertex2f(1.f, 1.f);
-            glVertex2f(0.0f,           1.f);
-            glEnd();
-#else
-            GLshort vtx1[] = { 0, 0,  1, 0,  1, 1,  0, 1 };
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glVertexPointer(2, GL_FLOAT, 0, vtx1);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            glDisableClientState(GL_VERTEX_ARRAY);
-#endif
-
-            glEnable(GL_TEXTURE_2D);
-            blurTextures[blurLevel]->bind();
-            glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
-                             blurTexWidth, blurTexHeight, 0);
-        }
-
-        // Scale back up hdr part
-        {
-            glBlendEquationEXT(GL_FUNC_ADD_EXT);
-            glBlendFunc(GL_DST_COLOR, GL_ONE);
-
-#ifdef UseOpenGL
-            glBegin(GL_QUADS);
-            drawBlendedVertices(0.f, 0.f, 1.f); //x2
-            drawBlendedVertices(0.f, 0.f, 1.f); //x2
-            glEnd();
-#else
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
-            drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
-            glDisableClientState(GL_VERTEX_ARRAY);
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-        }
-
-        glDisable(GL_BLEND);
-
-        if (!useLuminanceAlpha)
-        {
-            blurTempTexture->bind();
-            glCopyTexImage2D(GL_TEXTURE_2D, blurLevel, GL_LUMINANCE, 0, 0,
-                             blurTexWidth, blurTexHeight, 0);
-            // Erase color, replace with luminance image
-#ifdef UseOpenGL
-            glBegin(GL_QUADS);
-            glColor4f(0.f, 0.f, 0.f, 1.f);
-            glVertex2f(0.0f, 0.0f);
-            glVertex2f(1.0f, 0.0f);
-            glVertex2f(1.0f, 1.0f);
-            glVertex2f(0.0f, 1.0f);
-            glEnd();
-            glBegin(GL_QUADS);
-            drawBlendedVertices(0.f, 0.f, 1.f);
-            glEnd();
-#else
-            glColor4f(0.f, 0.f, 0.f, 1.f);
-            GLshort vtx1[] = { 0, 0,  1, 0,  1, 1,  0, 1 };
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glVertexPointer(2, GL_FLOAT, 0, vtx1);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            glDisableClientState(GL_VERTEX_ARRAY);
-
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            drawBlendedVertices(0.0f, 0.0f, 1.0f);
-            glDisableClientState(GL_VERTEX_ARRAY);
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-        }
-
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        blurTextures[blurLevel]->bind();
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
-                         blurTexWidth, blurTexHeight, 0);
     }
-    else
-    {
-        // GL_EXT_blend_subtract not supported
-        // Use compatible (but slow) glPixelTransfer instead
-#ifdef UseOpenGL
-        glBegin(GL_QUADS);
-        drawBlendedVertices(0.0f, 0.0f, 1.0f);
-        glEnd();
-#else
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        drawBlendedVertices(0.0f, 0.0f, 1.0f); // x2
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-        savedWScale = sceneTexWScale;
-        savedHScale = sceneTexHScale;
-        sceneTexWScale = blurWScale;
-        sceneTexHScale = blurHScale;
 
-        blurTextures[blurLevel]->bind();
-        glPixelTransferf(GL_RED_SCALE,   8.f);
-        glPixelTransferf(GL_GREEN_SCALE, 8.f);
-        glPixelTransferf(GL_BLUE_SCALE,  8.f);
-        glPixelTransferf(GL_RED_BIAS,   -0.5f);
-        glPixelTransferf(GL_GREEN_BIAS, -0.5f);
-        glPixelTransferf(GL_BLUE_BIAS,  -0.5f);
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
-                         blurTexWidth, blurTexHeight, 0);
-        glPixelTransferf(GL_RED_SCALE,   1.f);
-        glPixelTransferf(GL_GREEN_SCALE, 1.f);
-        glPixelTransferf(GL_BLUE_SCALE,  1.f);
-        glPixelTransferf(GL_RED_BIAS,    0.f);
-        glPixelTransferf(GL_GREEN_BIAS,  0.f);
-        glPixelTransferf(GL_BLUE_BIAS,   0.f);
-    }
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    blurTextures[blurLevel]->bind();
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
+                     blurTexWidth, blurTexHeight, 0);
+// blending end
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -2482,39 +2418,38 @@ void Renderer::renderToBlurTexture(int blurLevel)
     // Butterworth low pass filter to reduce flickering dots
     {
 #ifdef UseOpenGL
-        glBegin(GL_QUADS);
-        drawBlendedVertices(0.0f,    0.0f, .5f*1.f);
-        drawBlendedVertices(-xdelta, 0.0f, .5f*0.333f);
-        drawBlendedVertices( xdelta, 0.0f, .5f*0.25f);
-        glEnd();
+    glBegin(GL_QUADS);
+    drawBlendedVertices(0.0f,    0.0f, .5f*1.f);
+    drawBlendedVertices(-xdelta, 0.0f, .5f*0.333f);
+    drawBlendedVertices( xdelta, 0.0f, .5f*0.25f);
+    glEnd();
 #else
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        drawBlendedVertices(0.0f,    0.0f, .5f*1.f);
-        drawBlendedVertices(-xdelta, 0.0f, .5f*0.333f);
-        drawBlendedVertices( xdelta, 0.0f, .5f*0.25f);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    drawBlendedVertices(0.0f,    0.0f, .5f*1.f);
+    drawBlendedVertices(-xdelta, 0.0f, .5f*0.333f);
+    drawBlendedVertices( xdelta, 0.0f, .5f*0.25f);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
-                         blurTexWidth, blurTexHeight, 0);
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
+                     blurTexWidth, blurTexHeight, 0);
 #ifdef UseOpenGL
-        glBegin(GL_QUADS);
-        drawBlendedVertices(0.0f, -ydelta, .5f*0.667f);
-        drawBlendedVertices(0.0f,  ydelta, .5f*0.333f);
-        glEnd();
+    glBegin(GL_QUADS);
+    drawBlendedVertices(0.0f, -ydelta, .5f*0.667f);
+    drawBlendedVertices(0.0f,  ydelta, .5f*0.333f);
+    glEnd();
 #else
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        drawBlendedVertices(0.0f, -ydelta, .5f*0.667f);
-        drawBlendedVertices(0.0f,  ydelta, .5f*0.333f);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    drawBlendedVertices(0.0f, -ydelta, .5f*0.667f);
+    drawBlendedVertices(0.0f,  ydelta, .5f*0.333f);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
-        glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
-                         blurTexWidth, blurTexHeight, 0);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, blurFormat, 0, 0,
+                     blurTexWidth, blurTexHeight, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     // Gaussian blur
     switch (blurLevel)
@@ -2921,7 +2856,7 @@ void Renderer::draw(const Observer& observer,
 
     locationFilter = observer.getLocationFilter();
 
-    if (usePointSprite && getGLContext()->getVertexProcessor() != NULL)
+    if (getGLContext()->getVertexProcessor() != NULL)
     {
         useNewStarRendering = true;
     }
@@ -4835,7 +4770,7 @@ static void setupBumpTexenvAmbient(Color ambientColor)
     // space, and texture0 is a normal map.  The lighting is
     // calculated by computing the dot product.
     glActiveTexture(GL_TEXTURE0);
-    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_DOT3_RGB_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_DOT3_RGB);
     glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT, GL_PRIMARY_COLOR_EXT);
     glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_EXT, GL_SRC_COLOR);
     glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_EXT, GL_TEXTURE);
@@ -5501,15 +5436,8 @@ void Renderer::renderObject(const Vector3f& pos,
         // problems on Savage4 cards.
 
         Vector3f lightColor = light.color.toVector3() * light.irradiance;
-        if (useRescaleNormal)
-        {
-            glLightColor(GL_LIGHT0 + i, GL_DIFFUSE, lightColor);
-            glLightColor(GL_LIGHT0 + i, GL_SPECULAR, lightColor);
-        }
-        else
-        {
-            glLightColor(GL_LIGHT0 + i, GL_DIFFUSE, lightColor * radius);
-        }
+        glLightColor(GL_LIGHT0 + i, GL_DIFFUSE, lightColor);
+        glLightColor(GL_LIGHT0 + i, GL_SPECULAR, lightColor);
         glEnable(GL_LIGHT0 + i);
     }
 
