@@ -17,7 +17,7 @@
 using namespace Eigen;
 using namespace std;
 
-
+/*
 unsigned int vp::diffuse = 0;
 unsigned int vp::specular = 0;
 unsigned int vp::diffuseHaze = 0;
@@ -40,6 +40,7 @@ unsigned int vp::diffuseTexOffset_2light = 0;
 unsigned int vp::specular_2light = 0;
 unsigned int vp::nightLights_2light = 0;
 unsigned int vp::ellipticalGalaxy = 0;
+*/
 unsigned int vp::starDisc = 0;
 #ifdef HDR_COMPRESS
 unsigned int vp::diffuseBumpHDR = 0;
@@ -58,9 +59,10 @@ class VertexProcessorARB : public VertexProcessor
     virtual void enable();
     virtual void disable();
     virtual void use(unsigned int);
+/*
     virtual void parameter(vp::Parameter, float, float, float, float);
     virtual void parameter(vp::Parameter, const float*);
-
+*/
     virtual void enableAttribArray(unsigned int);
     virtual void disableAttribArray(unsigned int);
     virtual void attribArray(unsigned int index,
@@ -150,6 +152,7 @@ static bool LoadARBVertexProgram(const string& filename, unsigned int& id)
 VertexProcessor* vp::initARB()
 {
     cout << _("Initializing ARB vertex programs . . .\n");
+/*
     if (!LoadARBVertexProgram("shaders/diffuse_arb.vp", diffuse))
         return NULL;
     if (!LoadARBVertexProgram("shaders/specular_arb.vp", specular))
@@ -182,6 +185,7 @@ VertexProcessor* vp::initARB()
         return NULL;
     if (!LoadARBVertexProgram("shaders/night2_arb.vp", nightLights_2light))
         return NULL;
+*/
     if (!LoadARBVertexProgram("shaders/star_arb.vp", starDisc))
         return NULL;
 #ifdef HDR_COMPRESS
@@ -196,6 +200,7 @@ VertexProcessor* vp::initARB()
 #endif
 
     // Load vertex programs that are only required with fragment programs
+/*
     if (GLEW_ARB_fragment_program)
     {
         if (!LoadARBVertexProgram("shaders/multishadow_arb.vp", multiShadow))
@@ -208,7 +213,7 @@ VertexProcessor* vp::initARB()
 
     if (!LoadARBVertexProgram("shaders/ell_galaxy_arb.vp", ellipticalGalaxy))
         return NULL;
-
+*/
     cout << _("All ARB vertex programs loaded successfully.\n");
 
     return new VertexProcessorARB();
@@ -232,7 +237,7 @@ void vp::use(unsigned int prog)
     glBindProgramNV(GL_VERTEX_PROGRAM_NV, prog);
 }
 
-
+/*
 void vp::parameter(unsigned int param, const Color& c)
 {
     glProgramParameter4fNV(GL_VERTEX_PROGRAM_NV, param,
@@ -260,7 +265,7 @@ void arbvp::parameter(unsigned int param, const float* fv)
 {
     glProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, param, fv);
 }
-
+*/
 
 VertexProcessor::VertexProcessor()
 {
@@ -270,6 +275,7 @@ VertexProcessor::~VertexProcessor()
 {
 }
 
+/*
 void VertexProcessor::parameter(vp::Parameter param, const Eigen::Vector3f& v)
 {
     parameter(param, v.x(), v.y(), v.z(), 0.0f);
@@ -284,7 +290,7 @@ void VertexProcessor::parameter(vp::Parameter param, const Color& c)
 {
     parameter(param, c.red(), c.green(), c.blue(), c.alpha());
 }
-
+*/
 
 
 // VertexProcessorARB implementation
@@ -312,6 +318,7 @@ void VertexProcessorARB::use(unsigned int prog)
     glBindProgramARB(GL_VERTEX_PROGRAM_ARB, prog);
 }
 
+/*
 void VertexProcessorARB::parameter(vp::Parameter param,
                                    float x, float y, float z, float w)
 {
@@ -322,6 +329,7 @@ void VertexProcessorARB::parameter(vp::Parameter param, const float* fv)
 {
     glProgramEnvParameter4fvARB(GL_VERTEX_PROGRAM_ARB, param, fv);
 }
+*/
 
 void VertexProcessorARB::enableAttribArray(unsigned int index)
 {

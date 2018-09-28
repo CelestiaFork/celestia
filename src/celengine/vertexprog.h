@@ -22,12 +22,12 @@ namespace vp
     void enable();
     void disable();
     void use(unsigned int);
-
+/*
     void parameter(unsigned int, const Eigen::Vector4f&);
     void parameter(unsigned int, const Eigen::Vector3f&);
     void parameter(unsigned int, const Color&);
     void parameter(unsigned int, float, float, float, float);
-
+*/
     enum Parameter {
         LightDirection0    = 0,
         EyePosition        = 1,
@@ -53,6 +53,7 @@ namespace vp
         InverseScale       = 22
     };
 
+/*
     extern unsigned int specular;
     extern unsigned int diffuse;
     extern unsigned int diffuseHaze;
@@ -75,6 +76,7 @@ namespace vp
     extern unsigned int specular_2light;
     extern unsigned int nightLights_2light;
     extern unsigned int ellipticalGalaxy;
+*/
     extern unsigned int starDisc;
 #ifdef HDR_COMPRESS
     extern unsigned int diffuseBumpHDR;
@@ -87,11 +89,13 @@ namespace vp
 
 namespace arbvp
 {
+/*
     void parameter(unsigned int, const Eigen::Vector4f&);
     void parameter(unsigned int, const Eigen::Vector3f&);
     void parameter(unsigned int, const Color&);
     void parameter(unsigned int, float, float, float, float);
     void parameter(unsigned int, const float*);
+*/
 };
 
 
@@ -104,11 +108,13 @@ class VertexProcessor
     virtual void enable() = 0;
     virtual void disable() = 0;
     virtual void use(unsigned int) = 0;
+/*
     virtual void parameter(vp::Parameter, const Eigen::Vector4f&);
     virtual void parameter(vp::Parameter, const Eigen::Vector3f&);
     virtual void parameter(vp::Parameter, const Color&);
     virtual void parameter(vp::Parameter, float, float, float, float) = 0;
     virtual void parameter(vp::Parameter, const float*) = 0;
+*/
 
     virtual void enableAttribArray(unsigned int) = 0;
     virtual void disableAttribArray(unsigned int) = 0;
