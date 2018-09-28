@@ -4879,6 +4879,7 @@ static void renderSphereDefault(const RenderInfo& ri,
 }
 
 
+#if 0
 static void
 renderRingShadowsVS(Geometry* /*geometry*/,           //TODO: Remove unused parameters??
                     const RingSystem& rings,
@@ -4965,6 +4966,7 @@ renderRingShadowsVS(Geometry* /*geometry*/,           //TODO: Remove unused para
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDisable(GL_BLEND);
 }
+#endif
 
 
 void Renderer::renderLocations(const Body& body,
@@ -5774,7 +5776,7 @@ void Renderer::renderObject(const Vector3f& pos,
         Texture* ringsTex = obj.rings->texture.find(textureResolution);
         if (ringsTex != NULL)
         {
-            Vector3f sunDir = pos.normalized();
+//            Vector3f sunDir = pos.normalized();
 
             glEnable(GL_TEXTURE_2D);
             ringsTex->bind();
@@ -5782,7 +5784,6 @@ void Renderer::renderObject(const Vector3f& pos,
 #if 0
             if (context->getRenderPath() != GLContext::GLPath_GLSL)
             {
-#endif
                 renderRingShadowsVS(geometry,
                                     *obj.rings,
                                     sunDir,
@@ -5790,7 +5791,6 @@ void Renderer::renderObject(const Vector3f& pos,
                                     radius, 1.0f - obj.semiAxes.y(),
                                     planetMat, viewFrustum,
                                     *context);
-#if 0
             }
 #endif
         }
