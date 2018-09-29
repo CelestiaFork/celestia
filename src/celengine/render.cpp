@@ -4874,96 +4874,6 @@ static void renderSphereDefault(const RenderInfo& ri,
 }
 
 
-#if 0
-static void
-renderRingShadowsVS(Geometry* /*geometry*/,           //TODO: Remove unused parameters??
-                    const RingSystem& rings,
-                    const Vector3f& /*sunDir*/,
-                    RenderInfo& ri,
-                    float planetRadius,
-                    float /*oblateness*/,
-                    Matrix4f& /*planetMat*/,
-                    Frustum& viewFrustum,
-                    const GLContext& context)
-{
-    // Compute the transformation to use for generating texture
-    // coordinates from the object vertices.
-    float ringWidth = rings.outerRadius - rings.innerRadius;
-    float s = ri.sunDir_obj.y();
-    float scale = (abs(s) < 0.001f) ? 1000.0f : 1.0f / s;
-
-    if (abs(s) > 1.0f - 1.0e-4f)
-    {
-        // Planet is illuminated almost directly from above, so
-        // no ring shadow will be cast on the planet.  Conveniently
-        // avoids some potential division by zero when ray-casting.
-        return;
-    }
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
-
-    // If the ambient light level is greater than zero, reduce the
-    // darkness of the shadows.
-    float color[4] = { ri.ambientColor.red(), ri.ambientColor.green(),
-                       ri.ambientColor.blue(), 1.0f };
-    glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
-    glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT, GL_CONSTANT_EXT);
-    glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_EXT, GL_SRC_COLOR);
-    glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_EXT, GL_TEXTURE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_EXT, GL_SRC_COLOR);
-    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_ADD);
-
-    // Tweak the texture--set clamp to border and a border color with
-    // a zero alpha.  If a graphics card doesn't support clamp to border,
-    // it doesn't get to play.  It's possible to get reasonable behavior
-    // by turning off mipmaps and assuming transparent rows of pixels for
-    // the top and bottom of the ring textures . . . maybe later.
-    float bc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-
-    // Ring shadows look strange if they're always completely black.  Vary
-    // the darkness of the shadow based on the angle between the sun and the
-    // ring plane.  There's some justification for this--the larger the angle
-    // between the sun and the ring plane (normal), the more ring material
-    // there is to travel through.
-    //float alpha = (1.0f - abs(ri.sunDir_obj.y)) * 1.0f;
-    // ...but, images from Cassini are showing very dark ring shadows, so we'll
-    // go with that.
-    float alpha = 1.0f;
-
-    VertexProcessor* vproc = context.getVertexProcessor();
-    assert(vproc != NULL);
-
-    vproc->enable();
-    vproc->use(vp::ringShadow);
-    vproc->parameter(vp::LightDirection0, ri.sunDir_obj);
-    vproc->parameter(vp::DiffuseColor0, 1, 1, 1, alpha); // color = white
-    vproc->parameter(vp::TexGen_S,
-                     rings.innerRadius / planetRadius,
-                     1.0f / (ringWidth / planetRadius),
-                     0.0f, 0.5f);
-    vproc->parameter(vp::TexGen_T, scale, 0, 0, 0);
-    g_lodSphere->render(context, LODSphereMesh::Multipass,
-                        viewFrustum, ri.pixWidth, NULL);
-    vproc->disable();
-
-    // Restore the texture combiners
-    if (ri.useTexEnvCombine)
-    {
-        float color[4] = { 0, 0, 0, 0 };
-        glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    }
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glDisable(GL_BLEND);
-}
-#endif
-
-
 void Renderer::renderLocations(const Body& body,
                                const Vector3d& bodyPosition,
                                const Quaterniond& bodyOrientation)
@@ -5771,23 +5681,8 @@ void Renderer::renderObject(const Vector3f& pos,
         Texture* ringsTex = obj.rings->texture.find(textureResolution);
         if (ringsTex != NULL)
         {
-//            Vector3f sunDir = pos.normalized();
-
             glEnable(GL_TEXTURE_2D);
             ringsTex->bind();
-
-#if 0
-            if (context->getRenderPath() != GLContext::GLPath_GLSL)
-            {
-                renderRingShadowsVS(geometry,
-                                    *obj.rings,
-                                    sunDir,
-                                    ri,
-                                    radius, 1.0f - obj.semiAxes.y(),
-                                    planetMat, viewFrustum,
-                                    *context);
-            }
-#endif
         }
     }
 
