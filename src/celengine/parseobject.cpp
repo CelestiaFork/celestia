@@ -325,6 +325,7 @@ CreateFixedPosition(Hash* trajData, const Selection& centralObject, bool usePlan
 }
 
 
+#if 0
 /**
  * Parse a string list--either a single string or an array of strings is permitted.
  */
@@ -366,6 +367,7 @@ ParseStringList(Hash* table,
         return false;
     }
 }
+#endif
 
 
 #ifdef USE_SPICE

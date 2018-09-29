@@ -219,8 +219,6 @@ static int getCompressedBlockSize(int format)
 
 static GLenum GetGLTexAddressMode(Texture::AddressMode addressMode)
 {
-    const TextureCaps& caps = GetTextureCaps();
-
     switch (addressMode)
     {
     case Texture::Wrap:
