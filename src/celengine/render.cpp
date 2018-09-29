@@ -4072,6 +4072,7 @@ void Renderer::renderObjectAsPoint_nosprite(const Vector3f& position,
 
         starTex->bind();
         glColor(color, a);
+#ifdef UseOpenGL
         glBegin(GL_QUADS);
         glTexCoord2f(0, 1);
         glVertex(center + (v0 * size));
@@ -4082,6 +4083,26 @@ void Renderer::renderObjectAsPoint_nosprite(const Vector3f& position,
         glTexCoord2f(0, 0);
         glVertex(center + (v3 * size));
         glEnd();
+#else
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        Vector3f v01 = center + (v0 * size);
+        Vector3f v11 = center + (v1 * size);
+        Vector3f v21 = center + (v2 * size);
+        Vector3f v31 = center + (v3 * size);
+        GLfloat vtx1[] = {
+            v01.x(), v01.y(), v01.z(),
+            v11.x(), v11.y(), v11.z(),
+            v21.x(), v21.y(), v21.z(),
+            v31.x(), v31.y(), v31.z()
+        };
+        static GLshort tex1[] = {0, 1,  1, 1,  1, 0,  0, 0};
+        glVertexPointer(3, GL_FLOAT, 0, vtx1);
+        glTexCoordPointer(2, GL_SHORT, 0, tex1);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
         // If the object is brighter than magnitude 1, add a halo around it to
         // make it appear more brilliant.  This is a hack to compensate for the
@@ -4102,6 +4123,7 @@ void Renderer::renderObjectAsPoint_nosprite(const Vector3f& position,
             a = GlareOpacity * clamp((appMag - satPoint) * -0.8f);
             gaussianGlareTex->bind();
             glColor(color, a);
+#ifdef UseOpenGL
             glBegin(GL_QUADS);
             glTexCoord2f(0, 1);
             glVertex(center + (v0 * size));
@@ -4112,6 +4134,26 @@ void Renderer::renderObjectAsPoint_nosprite(const Vector3f& position,
             glTexCoord2f(0, 0);
             glVertex(center + (v3 * size));
             glEnd();
+#else
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            Vector3f v02 = center + (v0 * size);
+            Vector3f v12 = center + (v1 * size);
+            Vector3f v22 = center + (v2 * size);
+            Vector3f v32 = center + (v3 * size);
+            GLfloat vtx2[] = {
+                v02.x(), v02.y(), v02.z(),
+                v12.x(), v12.y(), v12.z(),
+                v22.x(), v22.y(), v22.z(),
+                v32.x(), v32.y(), v32.z()
+            };
+
+            glVertexPointer(3, GL_FLOAT, 0, vtx2);
+            glTexCoordPointer(2, GL_SHORT, 0, tex1);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            glDisableClientState(GL_VERTEX_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
         }
 
         glDisable(GL_DEPTH_TEST);
