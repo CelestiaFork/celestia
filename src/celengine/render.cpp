@@ -7726,7 +7726,11 @@ void Renderer::renderStars(const StarDatabase& starDB,
     }
     else
     {
+#ifdef UseOpenGL
         starRenderer.starPrimitive = GL_QUADS;
+#else
+        starRenderer.starPrimitive = GL_TRIANGLE_FAN;
+#endif
     }
 
     if (starStyle == ScaledDiscStars)
