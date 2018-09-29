@@ -100,8 +100,6 @@ static void RenderArrow(float shaftLength,
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, vtx1);
     glDrawArrays(GL_TRIANGLE_FAN, 0, nSections+2);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_VERTEX_ARRAY);
 
     // Render the arrow shaft
     auto vtx2 = new GLfloat[(nSections+1)*2*3];
@@ -122,8 +120,7 @@ static void RenderArrow(float shaftLength,
         glVertexPointer(3, GL_FLOAT, 0, &vtx2[i]);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_VERTEX_ARRAY);
+
     // Render the annulus
     for (i = 0, j = 0; i <= nSections; i++)
     {
@@ -142,8 +139,6 @@ static void RenderArrow(float shaftLength,
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     delete[] vtx2;
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_VERTEX_ARRAY);
 
     // Render the head of the arrow
     vtx1[0][0] = 0; vtx1[0][1] = 0; vtx1[0][2] = shaftLength + headLength;
