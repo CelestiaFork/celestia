@@ -382,7 +382,11 @@ ParticleEmitter::render(double tsec,
         // When the particle buffer is full, render the particles and flush it
         if (particleCount == particleBufferCapacity)
         {
+#ifdef UseOpenGL
             glDrawArrays(GL_QUADS, 0, particleCount * 4);
+#else
+            glDrawArrays(GL_TRIANGLE_FAN, 0, particleCount * 4);
+#endif
             particleCount = 0;
         }
 
@@ -441,7 +445,11 @@ ParticleEmitter::render(double tsec,
     // Render any remaining particles in the buffer
     if (particleCount > 0)
     {
+#ifdef UseOpenGL
         glDrawArrays(GL_QUADS, 0, particleCount * 4);
+#else
+        glDrawArrays(GL_TRIANGLE_FAN, 0, particleCount * 4);
+#endif
     }
 }
 
