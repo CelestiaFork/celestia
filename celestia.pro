@@ -244,6 +244,7 @@ ENGINE_SOURCES = \
     src/celengine/stardb.cpp \
     src/celengine/starname.cpp \
     src/celengine/staroctree.cpp \
+    src/celengine/staticshaders.cpp \
     src/celengine/stellarclass.cpp \
     src/celengine/texmanager.cpp \
     src/celengine/texture.cpp \
@@ -317,6 +318,7 @@ ENGINE_HEADERS = \
     src/celengine/stardb.h \
     src/celengine/starname.h \
     src/celengine/staroctree.h \
+    src/celengine/staticshaders.h \
     src/celengine/stellarclass.h \
     src/celengine/surface.h \
     src/celengine/texmanager.h \

@@ -78,6 +78,7 @@ std::ofstream hdrlog;
 #include <cassert>
 #include <sstream>
 #include <iomanip>
+#include "staticshaders.h"
 #include "eigenport.h"
 
 using namespace cmod;

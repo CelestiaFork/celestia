@@ -11,6 +11,7 @@
 #define _CELENGINE_GLCONTEXT_H_
 
 #include <celengine/vertexprog.h>
+#include <celengine/staticshaders.h>
 #include <vector>
 #include <string>
 
