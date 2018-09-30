@@ -676,8 +676,6 @@ class Renderer
     unsigned int textureResolution;
     DetailOptions detailOptions;
 
-    bool useNewStarRendering;
-
     uint32 frameCount;
 
     int currentIntervalIndex;
