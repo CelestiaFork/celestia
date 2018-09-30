@@ -20,8 +20,10 @@ static VertexProcessor* vpARB = NULL;
 
 GLContext::GLContext() :
     renderPath(GLPath_GLSL),
+#ifdef VPROC
     vertexPath(VPath_ARB),
     vertexProc(NULL),
+#endif
     maxSimultaneousTextures(1)
 {
 }
@@ -149,6 +151,7 @@ bool GLContext::bumpMappingSupported() const
 }
 
 
+#ifdef VPROC
 GLContext::VertexPath GLContext::getVertexPath() const
 {
     return vertexPath;
@@ -159,3 +162,4 @@ VertexProcessor* GLContext::getVertexProcessor() const
 {
     return vertexProc;
 }
+#endif

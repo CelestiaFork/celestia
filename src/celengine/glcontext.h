@@ -26,10 +26,12 @@ class GLContext
         GLPath_GLSL              = 8,
     };
 
+#ifdef VPROC
     enum VertexPath
     {
         VPath_ARB                = 2,
     };
+#endif
 
     void init(const std::vector<std::string>& ignoreExt);
 
@@ -44,14 +46,18 @@ class GLContext
     bool hasMultitexture() const { return true; };
     bool bumpMappingSupported() const;
 
+#ifdef VPROC
     VertexPath getVertexPath() const;
 
     VertexProcessor* getVertexProcessor() const;
+#endif
 
  private:
     GLRenderPath renderPath;
+#ifdef VPROC
     VertexPath vertexPath;
     VertexProcessor* vertexProc;
+#endif
 
     int maxSimultaneousTextures;
     std::vector<std::string> extensions;
