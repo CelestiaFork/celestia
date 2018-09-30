@@ -15,9 +15,15 @@ namespace glsl
 
 bool glsl::initGLSL()
 {
+#if defined(_DEBUG) || defined(DEBUG) || 1
+    // Only write to shader log file if this is a debug build
     if (g_shaderLogFile == NULL)
-        g_shaderLogFile = new ofstream("/tmp/celestia-shaders.log", ios::ate);
-
+#ifdef _WIN32
+        g_shaderLogFile = new ofstream("shaders.log");
+#else
+        g_shaderLogFile = new ofstream("/tmp/celestia-shaders.log");
+#endif
+#endif
     starDisc = LoadGLSLProgram("star");
     return true;
 }
@@ -83,7 +89,7 @@ LoadGLSLProgram(const string& name)
             status = prog->link();
         }
 */
-        cerr << "Failed to compile and link shader " << name << "!\n";
+        cout << "Failed to compile and link shader " << name << "!\n";
     }
 
     delete vs_source;
