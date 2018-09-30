@@ -70,6 +70,7 @@ void GLContext::init(const vector<string>& ignoreExt)
     glGetIntegerv(GL_MAX_TEXTURE_UNITS,
                   (GLint*) &maxSimultaneousTextures);
 
+#ifdef VPROC
     if (GLEW_ARB_vertex_program && glGenProgramsARB)
     {
         DPRINTF(1, "Renderer: ARB vertex programs supported.\n");
@@ -77,6 +78,7 @@ void GLContext::init(const vector<string>& ignoreExt)
             vpARB = vp::initARB();
         vertexProc = vpARB;
     }
+#endif
     glsl::initGLSL();
 }
 
@@ -86,6 +88,7 @@ bool GLContext::setRenderPath(GLRenderPath path)
     if (!renderPathSupported(path))
         return false;
 
+#ifdef VPROC
     switch (path)
     {
     case GLPath_GLSL:
@@ -94,6 +97,7 @@ bool GLContext::setRenderPath(GLRenderPath path)
     default:
         return false;
     }
+#endif
 
     renderPath = path;
 
@@ -106,7 +110,7 @@ bool GLContext::renderPathSupported(GLRenderPath path) const
     switch (path)
     {
     case GLPath_GLSL:
-        return GLEW_VERSION_2_0 != GL_FALSE;
+        return GLEW_VERSION_2_1 != GL_FALSE;
 
     default:
         return false;
