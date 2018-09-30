@@ -281,8 +281,8 @@ class PointStarVertexBuffer
 public:
     PointStarVertexBuffer(unsigned int _capacity);
     ~PointStarVertexBuffer();
-    void startPoints(const GLContext&);
-    void startSprites(const GLContext&);
+    void startPoints();
+    void startSprites();
     void render();
     void finish();
     inline void addStar(const Eigen::Vector3f& pos, const Color&, float);
@@ -323,26 +323,14 @@ PointStarVertexBuffer::~PointStarVertexBuffer()
         delete[] vertices;
 }
 
-void PointStarVertexBuffer::startSprites(const GLContext& _context)
+void PointStarVertexBuffer::startSprites()
 {
-#ifdef VPROC
-    context = &_context;
-    assert(context->getVertexProcessor() != NULL || !useSprites); // vertex shaders required for new star rendering
-#endif
-
     unsigned int stride = sizeof(StarVertex);
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, stride, &vertices[0].position);
     glEnableClientState(GL_COLOR_ARRAY);
     glColorPointer(4, GL_UNSIGNED_BYTE, stride, &vertices[0].color);
 
-#ifdef VPROC
-    VertexProcessor* vproc = context->getVertexProcessor();
-    vproc->enable();
-    vproc->use(vp::starDisc);
-    vproc->enableAttribArray(6);
-    vproc->attribArray(6, 1, GL_FLOAT, stride, &vertices[0].size);
-#else
     if (glsl::starDisc)
     {
         glsl::starDisc->use();
@@ -353,9 +341,7 @@ void PointStarVertexBuffer::startSprites(const GLContext& _context)
             glVertexAttribPointer(attr_size, 1, GL_FLOAT, GL_FALSE, stride, &vertices[0].size);
         }
         glUniform1i(glGetUniformLocation(glsl::starDisc->getID(), "texture"), 0);
-
     }
-#endif
 
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
@@ -365,10 +351,8 @@ void PointStarVertexBuffer::startSprites(const GLContext& _context)
     useSprites = true;
 }
 
-void PointStarVertexBuffer::startPoints(const GLContext& _context)
+void PointStarVertexBuffer::startPoints()
 {
-    context = &_context;
-
     unsigned int stride = sizeof(StarVertex);
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, stride, &vertices[0].position);
@@ -409,13 +393,8 @@ void PointStarVertexBuffer::render()
 
         if (useSprites)
         {
-#ifdef VPROC
-            VertexProcessor* vproc = context->getVertexProcessor();
-            vproc->attribArray(6, 1, GL_FLOAT, stride, &vertices[0].size);
-#else
             if (glsl::starDisc && attr_size != -1)
                 glVertexAttribPointer(attr_size, 1, GL_FLOAT, GL_FALSE, stride, &vertices[0].size);
-#endif
         }
 
         if (texture != NULL)
@@ -434,18 +413,12 @@ void PointStarVertexBuffer::finish()
 
     if (useSprites)
     {
-#ifdef VPROC
-        VertexProcessor* vproc = context->getVertexProcessor();
-        vproc->disableAttribArray(6);
-        vproc->disable();
-#else
         if (glsl::starDisc)
         {
             if(attr_size != -1)
                 glDisableVertexAttribArray(attr_size);
             glUseProgram(0);
         }
-#endif
         glDisable(GL_POINT_SPRITE);
     }
     else
@@ -495,15 +468,12 @@ Renderer::Renderer() :
     renderFlags(ShowStars | ShowPlanets),
     orbitMask(Body::Planet | Body::Moon | Body::Stellar),
     ambientLightLevel(0.1f),
-    fragmentShaderEnabled(false),
-    vertexShaderEnabled(false),
     brightnessBias(0.0f),
     saturationMagNight(1.0f),
     saturationMag(1.0f),
     starStyle(FuzzyPointStars),
     pointStarVertexBuffer(NULL),
     glareVertexBuffer(NULL),
-    useVertexPrograms(false),
     textureResolution(medres),
     frameCount(0),
     lastOrbitCacheFlush(0),
@@ -1308,39 +1278,6 @@ void Renderer::setDistanceLimit(float distanceLimit_)
 {
     distanceLimit = distanceLimit_;
     markSettingsChanged();
-}
-
-
-bool Renderer::getFragmentShaderEnabled() const
-{
-    return fragmentShaderEnabled;
-}
-
-void Renderer::setFragmentShaderEnabled(bool enable)
-{
-    fragmentShaderEnabled = enable && fragmentShaderSupported();
-    markSettingsChanged();
-}
-
-bool Renderer::fragmentShaderSupported() const
-{
-    return context->bumpMappingSupported();
-}
-
-bool Renderer::getVertexShaderEnabled() const
-{
-    return vertexShaderEnabled;
-}
-
-void Renderer::setVertexShaderEnabled(bool enable)
-{
-    vertexShaderEnabled = enable && vertexShaderSupported();
-    markSettingsChanged();
-}
-
-bool Renderer::vertexShaderSupported() const
-{
-    return useVertexPrograms;
 }
 
 
@@ -7374,11 +7311,11 @@ void Renderer::renderPointStars(const StarDatabase& starDB,
     starRenderer.starVertexBuffer->setTexture(gaussianDiscTex);
     starRenderer.glareVertexBuffer->setTexture(gaussianGlareTex);
 
-    starRenderer.glareVertexBuffer->startSprites(*context);
+    starRenderer.glareVertexBuffer->startSprites();
     if (starStyle == PointStars)
-        starRenderer.starVertexBuffer->startPoints(*context);
+        starRenderer.starVertexBuffer->startPoints();
     else
-        starRenderer.starVertexBuffer->startSprites(*context);
+        starRenderer.starVertexBuffer->startSprites();
 
     starDB.findVisibleStars(starRenderer,
                             obsPos.cast<float>(),
