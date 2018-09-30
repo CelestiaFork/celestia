@@ -77,6 +77,7 @@ void GLContext::init(const vector<string>& ignoreExt)
             vpARB = vp::initARB();
         vertexProc = vpARB;
     }
+    glsl::initGLSL();
 }
 
 
