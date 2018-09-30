@@ -15,6 +15,9 @@ namespace glsl
 
 bool glsl::initGLSL()
 {
+    if (g_shaderLogFile == NULL)
+        g_shaderLogFile = new ofstream("/tmp/celestia-shaders.log", ios::ate);
+
     starDisc = LoadGLSLProgram("star");
     return true;
 }
@@ -25,7 +28,7 @@ static string* ReadTextFromFile(const string& filename)
     if (!textFile.good())
         return nullptr;
 
-    string* s = new string;
+    string *s = new string;
 
     char c;
     while (textFile.get(c))
@@ -38,35 +41,29 @@ static string* ReadTextFromFile(const string& filename)
 static GLProgram*
 LoadGLSLProgram(const string& name)
 {
+    cout << "Loading GLSL shader: " << name << '\n';
+
+    string *vs_source = ReadTextFromFile("/home/globus/work/devel/Celestia/shaders/" + name + ".vert");
+    if (!vs_source)
+    {
+        cout << "Error loading vertex program: " << name << ".vert\n";
+        return nullptr;
+    }
+
+    string *fs_source = ReadTextFromFile("/home/globus/work/devel/Celestia/shaders/" + name + ".frag");
+    if (!fs_source)
+    {
+        delete vs_source;
+        cout << "Error loading fragment program: " << name << ".frag\n";
+        return nullptr;
+    }
+
     GLProgram* prog = nullptr;
     GLShaderStatus status;
+    status = GLShaderLoader::CreateProgram(*vs_source, *fs_source, &prog);
 
-    GLVertexShader* vs = nullptr;
-    GLFragmentShader* fs = nullptr;
-
-    string* source;
-
-    source = ReadTextFromFile("shader/" + name + ".vert");
-    GLShaderLoader::CreateVertexShader(*source, &vs);
-    delete source;
-
-    source = ReadTextFromFile("shader/" + name + ".frag");
-    GLShaderLoader::CreateFragmentShader(*source, &fs);
-    delete source;
-
-    if (vs != nullptr && fs != nullptr)
-    {
-        status = GLShaderLoader::CreateProgram(*vs, *fs, &prog);
-        if (status == ShaderStatus_OK)
-            status = prog->link();
-    }
-    else
-    {
-        status = ShaderStatus_CompileError;
-    }
-
-    delete vs;
-    delete fs;
+    if (status == ShaderStatus_OK)
+        status = prog->link();
 
     if (status != ShaderStatus_OK)
     {
@@ -86,8 +83,11 @@ LoadGLSLProgram(const string& name)
             status = prog->link();
         }
 */
-        clog << "Failed to read shader " << name << "!\n";
+        cerr << "Failed to compile and link shader " << name << "!\n";
     }
+
+    delete vs_source;
+    delete fs_source;
 
     return prog;
 }
