@@ -10,6 +10,7 @@ static GLProgram* LoadGLSLProgram(const string& name);
 namespace glsl
 {
     GLProgram* starDisc = nullptr;
+    GLProgram* starNew  = nullptr;
 };
 
 
@@ -25,6 +26,7 @@ bool glsl::initGLSL()
 #endif
 #endif
     starDisc = LoadGLSLProgram("star");
+    starNew  = LoadGLSLProgram("star_new");
     return true;
 }
 
