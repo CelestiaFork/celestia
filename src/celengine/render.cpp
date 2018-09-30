@@ -327,6 +327,7 @@ private:
     const GLContext* context;
     bool useSprites;
     Texture* texture;
+    GLint attr_size{-1};
 };
 
 
@@ -448,8 +449,10 @@ PointStarVertexBuffer::~PointStarVertexBuffer()
 
 void PointStarVertexBuffer::startSprites(const GLContext& _context)
 {
+#ifdef VPROC
     context = &_context;
     assert(context->getVertexProcessor() != NULL || !useSprites); // vertex shaders required for new star rendering
+#endif
 
     unsigned int stride = sizeof(StarVertex);
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -457,11 +460,24 @@ void PointStarVertexBuffer::startSprites(const GLContext& _context)
     glEnableClientState(GL_COLOR_ARRAY);
     glColorPointer(4, GL_UNSIGNED_BYTE, stride, &vertices[0].color);
 
+#ifdef VPROC
     VertexProcessor* vproc = context->getVertexProcessor();
     vproc->enable();
     vproc->use(vp::starDisc);
     vproc->enableAttribArray(6);
     vproc->attribArray(6, 1, GL_FLOAT, stride, &vertices[0].size);
+#else
+    if (glsl::starDisc)
+    {
+        glsl::starDisc->use();
+        attr_size = glGetAttribLocation(glsl::starDisc->getID(), "size");
+        if (attr_size != -1)
+        {
+            glEnableVertexAttribArray(attr_size);
+            glVertexAttribPointer(attr_size, 1, GL_FLOAT, GL_FALSE, stride, &vertices[0].size);
+        }
+    }
+#endif
 
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
@@ -516,8 +532,13 @@ void PointStarVertexBuffer::render()
 
         if (useSprites)
         {
+#ifdef VPROC
             VertexProcessor* vproc = context->getVertexProcessor();
             vproc->attribArray(6, 1, GL_FLOAT, stride, &vertices[0].size);
+#else
+            if (glsl::starDisc)
+                glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, stride, &vertices[0].size);
+#endif
         }
 
         if (texture != NULL)
@@ -536,10 +557,18 @@ void PointStarVertexBuffer::finish()
 
     if (useSprites)
     {
+#ifdef VPROC
         VertexProcessor* vproc = context->getVertexProcessor();
         vproc->disableAttribArray(6);
         vproc->disable();
-
+#else
+        if (glsl::starDisc)
+        {
+            if(attr_size != -1)
+                glDisableVertexAttribArray(attr_size);
+            glUseProgram(0);
+        }
+#endif
         glDisable(GL_POINT_SPRITE);
     }
     else
