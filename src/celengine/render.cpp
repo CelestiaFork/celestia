@@ -275,31 +275,7 @@ double computeCosViewConeAngle(double verticalFOV, double width, double height)
 }
 
 
-/**** Star vertex buffer classes ****/
-
-class StarVertexBuffer
-{
-public:
-    StarVertexBuffer(unsigned int _capacity);
-    ~StarVertexBuffer();
-    void start();
-    void render();
-    void finish();
-    void addStar(const Eigen::Vector3f&, const Color&, float);
-    void setBillboardOrientation(const Eigen::Quaternionf&);
-
-private:
-    unsigned int capacity;
-    unsigned int nStars;
-    Eigen::Vector3f* vertices;
-    float* texCoords;
-    unsigned char* colors;
-    Eigen::Vector3f v0, v1, v2, v3;
-};
-
-
-// PointStarVertexBuffer is used instead of StarVertexBuffer when the
-// hardware supports point sprites.
+// PointStarVertexBuffer is used when hardware supports point sprites.
 class PointStarVertexBuffer
 {
 public:
@@ -329,106 +305,6 @@ private:
     Texture* texture;
     GLint attr_size{-1};
 };
-
-
-StarVertexBuffer::StarVertexBuffer(unsigned int _capacity) :
-    capacity(_capacity),
-    vertices(NULL),
-    texCoords(NULL),
-    colors(NULL)
-{
-    nStars = 0;
-    vertices = new Vector3f[capacity * 4];
-    texCoords = new float[capacity * 8];
-    colors = new unsigned char[capacity * 16];
-
-    // Fill the texture coordinate array now, since it will always have
-    // the same contents.
-    for (unsigned int i = 0; i < capacity; i++)
-    {
-        unsigned int n = i * 8;
-        texCoords[n    ] = 0; texCoords[n + 1] = 0;
-        texCoords[n + 2] = 1; texCoords[n + 3] = 0;
-        texCoords[n + 4] = 1; texCoords[n + 5] = 1;
-        texCoords[n + 6] = 0; texCoords[n + 7] = 1;
-    }
-}
-
-StarVertexBuffer::~StarVertexBuffer()
-{
-    if (vertices != NULL)
-        delete[] vertices;
-    if (colors != NULL)
-        delete[] colors;
-    if (texCoords != NULL)
-        delete[] texCoords;
-}
-
-void StarVertexBuffer::start()
-{
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vertices);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glColorPointer(4, GL_UNSIGNED_BYTE, 0, colors);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
-    glDisableClientState(GL_NORMAL_ARRAY);
-}
-
-void StarVertexBuffer::render()
-{
-    if (nStars != 0)
-    {
-        glDrawArrays(GL_TRIANGLE_FAN, 0, nStars * 4);
-        nStars = 0;
-    }
-}
-
-void StarVertexBuffer::finish()
-{
-    render();
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-}
-
-void StarVertexBuffer::addStar(const Vector3f& pos,
-                               const Color& color,
-                               float size)
-{
-    if (nStars < capacity)
-    {
-        int n = nStars * 4;
-        vertices[n + 0]  = pos + v0 * size;
-        vertices[n + 1]  = pos + v1 * size;
-        vertices[n + 2]  = pos + v2 * size;
-        vertices[n + 3] = pos + v3 * size;
-
-        n = nStars * 16;
-        color.get(colors + n);
-        color.get(colors + n + 4);
-        color.get(colors + n + 8);
-        color.get(colors + n + 12);
-
-        nStars++;
-    }
-
-    if (nStars == capacity)
-    {
-        render();
-        nStars = 0;
-    }
-}
-
-void StarVertexBuffer::setBillboardOrientation(const Quaternionf& q)
-{
-    Matrix3f m = q.conjugate().toRotationMatrix();
-    v0 = m * Vector3f(-1, -1, 0);
-    v1 = m * Vector3f( 1, -1, 0);
-    v2 = m * Vector3f( 1,  1, 0);
-    v3 = m * Vector3f(-1,  1, 0);
-}
-
 
 PointStarVertexBuffer::PointStarVertexBuffer(unsigned int _capacity) :
     capacity(_capacity),
@@ -624,7 +500,6 @@ Renderer::Renderer() :
     saturationMagNight(1.0f),
     saturationMag(1.0f),
     starStyle(FuzzyPointStars),
-    starVertexBuffer(NULL),
     pointStarVertexBuffer(NULL),
     glareVertexBuffer(NULL),
     useVertexPrograms(false),
@@ -650,7 +525,6 @@ Renderer::Renderer() :
     settingsChanged(true),
     objectAnnotationSetOpen(false)
 {
-    starVertexBuffer = new StarVertexBuffer(2048);
     pointStarVertexBuffer = new PointStarVertexBuffer(2048);
     glareVertexBuffer = new PointStarVertexBuffer(2048);
     skyVertices = new SkyVertex[MaxSkySlices * (MaxSkyRings + 1)];
@@ -684,8 +558,6 @@ Renderer::Renderer() :
 
 Renderer::~Renderer()
 {
-    if (starVertexBuffer != NULL)
-        delete starVertexBuffer;
     if (pointStarVertexBuffer != NULL)
         delete pointStarVertexBuffer;
     if (glareVertexBuffer != NULL)
@@ -6973,8 +6845,7 @@ class StarRenderer : public ObjectRenderer<Star, float>
 
     vector<Renderer::Particle>*      glareParticles;
     vector<RenderListEntry>*         renderList;
-    StarVertexBuffer*      starVertexBuffer;
-    PointStarVertexBuffer* pointStarVertexBuffer;
+    PointStarVertexBuffer*           pointStarVertexBuffer;
 
     const StarDatabase* starDB;
 
@@ -6999,7 +6870,6 @@ class StarRenderer : public ObjectRenderer<Star, float>
 
 StarRenderer::StarRenderer() :
     ObjectRenderer<Star, float>(STAR_DISTANCE_LIMIT),
-    starVertexBuffer     (NULL),
     pointStarVertexBuffer(NULL),
     useScaledDiscs       (false),
     maxDiscSize          (1.0f),
