@@ -3,14 +3,18 @@ attribute float magnitude;
 uniform vec2 viewportSize;
 uniform float limitingMagnitude;
 uniform float saturationMagnitude;
-uniform float glareBrightness;
-uniform float sigma2;
-uniform float glareSigma2;
+//uniform float glareBrightness;
+//uniform float sigma2;
+//uniform float glareSigma2;
 //uniform float exposure;
 
 varying vec2 pointCenter;
 varying vec4 starColor;
 varying float brightness;
+
+const float glareBrightness = 0.003f;
+const float sigma2 = 0.35f;
+const float glareSigma2 = 0.35f; // fixme
 
 const float thresholdBrightness = 1.0 / 512.0;
 
