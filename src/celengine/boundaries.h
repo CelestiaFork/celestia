@@ -24,23 +24,20 @@ class ConstellationBoundaries
     ConstellationBoundaries();
     ~ConstellationBoundaries();
 
-    class Chain
-    {
-     public:
-        ~Chain() { delete[] vtx; }
-        size_t size() const { return v.size(); }
-
-        std::vector<Eigen::Vector3f> v;
-        GLfloat* vtx{ nullptr };
-    };
+    typedef std::vector<Eigen::Vector3f> Chain;
 
     void moveto(float ra, float dec);
     void lineto(float ra, float dec);
     void render();
+    void prepare();
 
  private:
     Chain* currentChain;
     std::vector<Chain*> chains;
+
+    GLfloat *vtx_buf{ nullptr };
+    GLsizei vtx_num{ 0 };
+    bool prepared{ false };
 };
 
 ConstellationBoundaries* ReadBoundaries(std::istream&);

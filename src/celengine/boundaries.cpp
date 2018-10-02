@@ -9,10 +9,11 @@
 // of the License, or (at your option) any later version.
 
 #include <cassert>
+#include <numeric>
 #include "boundaries.h"
 #include "astro.h"
 #include <GL/glew.h>
-#include "vecgl.h"
+#include "staticshaders.h"
 
 using namespace Eigen;
 using namespace std;
@@ -22,82 +23,83 @@ static const float BoundariesDrawDistance = 10000.0f;
 
 
 ConstellationBoundaries::ConstellationBoundaries() :
-    currentChain(NULL)
+    currentChain(nullptr)
 {
     currentChain = new Chain();
-    currentChain->v.push_back(Vector3f::Zero());
+    currentChain->push_back(Vector3f::Zero());
 }
 
 ConstellationBoundaries::~ConstellationBoundaries()
 {
-    for (vector<Chain*>::iterator iter = chains.begin();
-         iter != chains.end(); iter++)
-    {
-        delete *iter;
-    }
+    for (auto const chain : chains)
+        delete chain;
 
     delete currentChain;
+
+    delete[] vtx_buf;
 }
 
 
 void ConstellationBoundaries::moveto(float ra, float dec)
 {
-    assert(currentChain != NULL);
+    assert(currentChain != nullptr);
 
     Vector3f v = astro::equatorialToEclipticCartesian(ra, dec, BoundariesDrawDistance);
     if (currentChain->size() > 1)
     {
+        currentChain->shrink_to_fit();
         chains.insert(chains.end(), currentChain);
         currentChain = new Chain();
-        currentChain->v.push_back(v);
+        currentChain->push_back(v);
     }
     else
     {
-        currentChain->v[0] = v;
+        (*currentChain)[0] = v;
     }
 }
 
 
 void ConstellationBoundaries::lineto(float ra, float dec)
 {
-    currentChain->v.push_back(astro::equatorialToEclipticCartesian(ra, dec, BoundariesDrawDistance));
+    currentChain->push_back(astro::equatorialToEclipticCartesian(ra, dec, BoundariesDrawDistance));
 }
 
 
 void ConstellationBoundaries::render()
 {
-#ifndef UseOpenGL
+    if (!prepared) prepare();
     glEnableClientState(GL_VERTEX_ARRAY);
-#endif
-
-    for (const auto& chain : chains)
-    {
-#ifdef UseOpenGL
-        glBegin(GL_LINE_STRIP);
-        for (const auto& vertex: chain->v)
-        {
-            glVertex3fv(vertex.data());
-        }
-        glEnd();
-#else
-        size_t chain_size = chain->size();
-        if (!chain->vtx)
-        {
-            chain->vtx = new GLfloat[chain_size * 3];
-            for (size_t i = 0, j = 0; i < chain_size; i++, j+=3)
-            {
-                memcpy(&(chain->vtx[j]), chain->v[i].data(), 3*sizeof(GLfloat));
-            }
-        }
-        glVertexPointer(3, GL_FLOAT, 0, chain->vtx);
-        glDrawArrays(GL_LINE_STRIP, 0, chain_size);
-#endif
-    }
-#ifndef UseOpenGL
+    glVertexPointer(3, GL_FLOAT, 0, vtx_buf);
+    glDrawArrays(GL_LINES, 0, vtx_num);
     glDisableClientState(GL_VERTEX_ARRAY);
-#endif
 }
 
+void ConstellationBoundaries::prepare()
+{
+    vtx_num = accumulate(chains.begin(), chains.end(), 0,
+                         [](int a, Chain* b) { return a + b->size(); });
+
+    // as we use GL_LINES we should double the number of vertices
+    vtx_num *= 2;
+
+    vtx_buf = new GLfloat[vtx_num * 3];
+    GLfloat* ptr = vtx_buf;
+    for (const auto chain : chains)
+    {
+        memcpy(ptr, (*chain)[0].data(), sizeof(GLfloat) * 3);
+        ptr += 3;
+        for(unsigned i = 1; i < chain->size(); i++)
+        {
+            memcpy(ptr, (*chain)[i].data(), sizeof(GLfloat) * 3);
+            ptr += 3;
+	    memcpy(ptr, (*chain)[i].data(), sizeof(GLfloat) * 3);
+            ptr += 3;
+        }
+        memcpy(ptr, (*chain)[0].data(), sizeof(GLfloat) * 3);
+        ptr += 3;
+    }
+    prepared = true;
+}
 
 ConstellationBoundaries* ReadBoundaries(istream& in)
 {
@@ -138,5 +140,3 @@ ConstellationBoundaries* ReadBoundaries(istream& in)
 
     return boundaries;
 }
-
-
