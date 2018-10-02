@@ -347,7 +347,6 @@ void PointStarVertexBuffer::startSprites()
     glDisableClientState(GL_NORMAL_ARRAY);
 
     glEnable(GL_POINT_SPRITE);
-    glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 
     useSprites = true;
 }
