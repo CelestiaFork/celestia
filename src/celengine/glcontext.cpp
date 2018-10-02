@@ -20,10 +20,6 @@ static VertexProcessor* vpARB = NULL;
 
 GLContext::GLContext() :
     renderPath(GLPath_GLSL),
-#ifdef VPROC
-    vertexPath(VPath_ARB),
-    vertexProc(NULL),
-#endif
     maxSimultaneousTextures(1)
 {
 }
@@ -72,15 +68,6 @@ void GLContext::init(const vector<string>& ignoreExt)
     glGetIntegerv(GL_MAX_TEXTURE_UNITS,
                   (GLint*) &maxSimultaneousTextures);
 
-#ifdef VPROC
-    if (GLEW_ARB_vertex_program && glGenProgramsARB)
-    {
-        DPRINTF(1, "Renderer: ARB vertex programs supported.\n");
-        if (vpARB == NULL)
-            vpARB = vp::initARB();
-        vertexProc = vpARB;
-    }
-#endif
     glsl::initGLSL();
 }
 
@@ -89,17 +76,6 @@ bool GLContext::setRenderPath(GLRenderPath path)
 {
     if (!renderPathSupported(path))
         return false;
-
-#ifdef VPROC
-    switch (path)
-    {
-    case GLPath_GLSL:
-        vertexPath = VPath_ARB;
-        break;
-    default:
-        return false;
-    }
-#endif
 
     renderPath = path;
 
@@ -149,17 +125,3 @@ bool GLContext::bumpMappingSupported() const
 {
     return true;
 }
-
-
-#ifdef VPROC
-GLContext::VertexPath GLContext::getVertexPath() const
-{
-    return vertexPath;
-}
-
-
-VertexProcessor* GLContext::getVertexProcessor() const
-{
-    return vertexProc;
-}
-#endif
