@@ -7871,13 +7871,14 @@ void Renderer::renderParticles(const vector<Particle>& particles,
 {
     int nParticles = particles.size();
 
-    {
-        Matrix3f m = orientation.conjugate().toRotationMatrix();
-        Vector3f v0 = m * Vector3f(-1, -1, 0);
-        Vector3f v1 = m * Vector3f( 1, -1, 0);
-        Vector3f v2 = m * Vector3f( 1,  1, 0);
-        Vector3f v3 = m * Vector3f(-1,  1, 0);
+    Matrix3f m = orientation.conjugate().toRotationMatrix();
+    Vector3f v0 = m * Vector3f(-1, -1, 0);
+    Vector3f v1 = m * Vector3f( 1, -1, 0);
+    Vector3f v2 = m * Vector3f( 1,  1, 0);
+    Vector3f v3 = m * Vector3f(-1,  1, 0);
 
+#if 1 //def UseOpenGL
+    {
         glBegin(GL_QUADS);
         for (int i = 0; i < nParticles; i++)
         {
@@ -7895,6 +7896,20 @@ void Renderer::renderParticles(const vector<Particle>& particles,
             glVertex(center + (v3 * size));
         }
         glEnd();
+#else
+    GLshort tex[] = { 0, 1,  1, 1, 1, 0, 0, 0 };
+    GLfloat *vtx1 = new GLfloat[nParticles*3];
+    GLshort *tex1 = new GLshort[nParticles*2];
+
+    for (int i = 0, j = 0; i < nParticles; i++, j++)
+    {
+        Vector3f center = particles[i].center;
+        float size = particles[i].size;
+
+    }
+    delete[] vtx1;
+    delete[] tex1;
+#endif
     }
 }
 
