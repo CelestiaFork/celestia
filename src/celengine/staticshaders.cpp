@@ -11,6 +11,7 @@ namespace glsl
 {
     GLProgram* starDisc = nullptr;
     GLProgram* starNew  = nullptr;
+    GLProgram* simple   = nullptr;
 };
 
 
@@ -27,6 +28,7 @@ bool glsl::initGLSL()
 #endif
     starDisc = LoadGLSLProgram("star");
     starNew  = LoadGLSLProgram("star_new");
+    simple   = LoadGLSLProgram("simple");
     return true;
 }
 
