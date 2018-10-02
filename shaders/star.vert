@@ -1,4 +1,4 @@
-#version 110
+#version 120
 
 /*
  Render stars as point sprites; this shader does nothing more than
