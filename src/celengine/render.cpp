@@ -352,6 +352,8 @@ void PointStarVertexBuffer::startSprites(const GLContext& _context)
             glEnableVertexAttribArray(attr_size);
             glVertexAttribPointer(attr_size, 1, GL_FLOAT, GL_FALSE, stride, &vertices[0].size);
         }
+        glUniform1i(glGetUniformLocation(glsl::starDisc->getID(), "texture"), 0);
+
     }
 #endif
 
@@ -412,8 +414,8 @@ void PointStarVertexBuffer::render()
             VertexProcessor* vproc = context->getVertexProcessor();
             vproc->attribArray(6, 1, GL_FLOAT, stride, &vertices[0].size);
 #else
-            if (glsl::starDisc)
-                glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, stride, &vertices[0].size);
+            if (glsl::starDisc && attr_size != -1)
+                glVertexAttribPointer(attr_size, 1, GL_FLOAT, GL_FALSE, stride, &vertices[0].size);
 #endif
         }
 
