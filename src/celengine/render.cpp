@@ -3162,13 +3162,12 @@ void Renderer::draw(const Observer& observer,
             opacity = clamp((MaxAsterismLabelsConstDist - dist) /
                             (MaxAsterismLabelsDist - MaxAsterismLabelsConstDist) + 1);
         }
-        glColor(BoundaryColor, opacity);
 
         glDisable(GL_TEXTURE_2D);
         if ((renderFlags & ShowSmoothLines) != 0)
             enableSmoothLines();
         if (universe.getBoundaries() != NULL)
-            universe.getBoundaries()->render();
+            universe.getBoundaries()->render(BoundaryColor, opacity);
         if ((renderFlags & ShowSmoothLines) != 0)
             disableSmoothLines();
     }

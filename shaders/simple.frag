@@ -1,5 +1,8 @@
 #version 120
 
+uniform vec3 color;
+uniform float opacity;
+
 void main(void) {
-  gl_FragColor = gl_Color;
+  gl_FragColor = vec4(color, opacity);
 }

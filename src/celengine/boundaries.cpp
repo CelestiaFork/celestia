@@ -31,12 +31,20 @@ ConstellationBoundaries::ConstellationBoundaries() :
 
 ConstellationBoundaries::~ConstellationBoundaries()
 {
+    cleanup();
+}
+
+void ConstellationBoundaries::cleanup()
+{
     for (auto const chain : chains)
         delete chain;
+    chains.clear();
 
     delete currentChain;
+    currentChain = nullptr;
 
     delete[] vtx_buf;
+    vtx_buf = nullptr;
 }
 
 
@@ -47,7 +55,6 @@ void ConstellationBoundaries::moveto(float ra, float dec)
     Vector3f v = astro::equatorialToEclipticCartesian(ra, dec, BoundariesDrawDistance);
     if (currentChain->size() > 1)
     {
-        currentChain->shrink_to_fit();
         chains.insert(chains.end(), currentChain);
         currentChain = new Chain();
         currentChain->push_back(v);
@@ -65,13 +72,36 @@ void ConstellationBoundaries::lineto(float ra, float dec)
 }
 
 
-void ConstellationBoundaries::render()
+void ConstellationBoundaries::render(Color color, float opacity)
 {
-    if (!prepared) prepare();
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vtx_buf);
+    if (vboId == 0)
+    {
+        if (!prepared)
+            prepare();
+        glGenBuffers(1, &vboId);
+        glBindBuffer(GL_ARRAY_BUFFER, vboId);
+        glBufferData(GL_ARRAY_BUFFER, vtx_num*3*sizeof(GLfloat), vtx_buf, GL_STATIC_DRAW);
+        cleanup();
+    }
+    else
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, vboId);
+    }
+
+    if (glsl::simple)
+    {
+        glsl::simple->use();
+        Vec3ShaderParameter(glsl::simple->getID(), "color") = color.toVector3();
+        FloatShaderParameter(glsl::simple->getID(), "opacity") = opacity;
+    }
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_LINES, 0, vtx_num);
-    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableVertexAttribArray(0);
+
+    glUseProgram(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ConstellationBoundaries::prepare()

@@ -16,6 +16,7 @@
 #include <vector>
 #include <iostream>
 #include <GL/glew.h>
+#include "celutil/color.h"
 
 
 class ConstellationBoundaries
@@ -28,16 +29,19 @@ class ConstellationBoundaries
 
     void moveto(float ra, float dec);
     void lineto(float ra, float dec);
-    void render();
-    void prepare();
+    void render(Color color, float opacity);
 
  private:
     Chain* currentChain;
     std::vector<Chain*> chains;
 
+    GLuint  vboId{ 0 };
     GLfloat *vtx_buf{ nullptr };
     GLsizei vtx_num{ 0 };
     bool prepared{ false };
+
+    void cleanup();
+    void prepare();
 };
 
 ConstellationBoundaries* ReadBoundaries(std::istream&);
