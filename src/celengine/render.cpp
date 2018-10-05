@@ -3934,7 +3934,8 @@ void Renderer::renderObjectAsPoint(const Vector3f& position,
         center = center + direction * (radius / (m * Vector3f::UnitZ()).dot(direction));
 
         glEnable(GL_DEPTH_TEST);
-#if !defined(NO_MAX_POINT_SIZE)
+//#if !defined(NO_MAX_POINT_SIZE)
+#if 0
         // TODO: OpenGL appears to limit the max point size unless we
         // actually set up a shader that writes the pointsize values. To get
         // around this, we'll use billboards.
@@ -3997,6 +3998,7 @@ void Renderer::renderObjectAsPoint(const Vector3f& position,
 #else
         // Disabled because of point size limits
         glEnable(GL_POINT_SPRITE);
+#ifdef UseOpenGL
         glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 
         gaussianDiscTex->bind();
@@ -4022,7 +4024,61 @@ void Renderer::renderObjectAsPoint(const Vector3f& position,
             glVertex(center);
             glEnd();
         }
+#else
+        // TODO: instead of drawing one object push it to vector and then
+        // render all object at once?
+        gaussianDiscTex->bind();
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        glEnable(GL_TEXTURE_2D);
 
+        GLint attr_size = -1;
+        if (glsl::starDisc)
+        {
+            glsl::starDisc->use();
+            attr_size = glGetAttribLocation(glsl::starDisc->getID(), "size");
+            if (attr_size != -1)
+            {
+                glEnableVertexAttribArray(attr_size);
+                glVertexAttribPointer(attr_size, 1, GL_FLOAT, GL_FALSE, 0, &pointSize);
+            }
+            glUniform1i(glGetUniformLocation(glsl::starDisc->getID(), "texture"), 0);
+        }
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3, GL_FLOAT, 0, center.data());
+
+        glEnableClientState(GL_COLOR_ARRAY);
+        GLfloat color_main[] = {color.red(), color.green(), color.blue(), alpha};
+        glColorPointer(4, GL_FLOAT, 0, color_main);
+
+        glDrawArrays(GL_POINTS, 0, 1);
+
+        // If the object is brighter than magnitude 1, add a halo around it to
+        // make it appear more brilliant.  This is a hack to compensate for the
+        // limited dynamic range of monitors.
+        //
+        // TODO: Stars look fine but planets look unrealistically bright
+        // with halos.
+        if (useHalos && glareAlpha > 0.0f)
+        {
+            gaussianGlareTex->bind();
+            if (attr_size != -1)
+                glVertexAttribPointer(attr_size, 1, GL_FLOAT, GL_FALSE, 0, &pointSize);
+            GLfloat color_glare[] = {color.red(), color.green(), color.blue(), glareAlpha};
+            glColorPointer(4, GL_FLOAT, 0, color_glare);
+
+            glDrawArrays(GL_POINTS, 0, 1);
+        }
+
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_COLOR_ARRAY);
+
+        if (attr_size != -1)
+            glDisableVertexAttribArray(attr_size);
+        glUseProgram(0);
+
+        glDisable(GL_TEXTURE_2D);
+#endif
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_DEPTH_TEST);
 #endif // NO_MAX_POINT_SIZE
