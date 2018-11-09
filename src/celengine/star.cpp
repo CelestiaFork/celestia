@@ -287,7 +287,7 @@ static float bmag_correctionL[10] =
 
 static float bmag_correctionT[10] =
 {
-    -8.9f, -9.6f, -10.8f, -11.9f, -13.1f, -14.4f, -16.1f, -17.9f, -19.6f, -19.6f,
+    -8.9f, -9.6f, -10.8f, -11.9f, -13.1f, -14.4f, -16.1f, -17.9f, -19.6f, -21.7f,
 };
 
 // Bolometric correction for Brown dwarf Y is an extrapolation of the L & T data
