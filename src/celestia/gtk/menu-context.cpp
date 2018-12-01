@@ -30,7 +30,7 @@ static void handleContextPlanet(gpointer data);
 static void handleContextSurface(gpointer data);
 
 /* Definitions: Helpers */
-static GtkMenuItem* AppendMenu(GtkWidget* parent, GtkSignalFunc callback, const gchar* name, gpointer extra);
+static GtkMenuItem* AppendMenu(GtkWidget* parent, GCallback callback, const gchar* name, gpointer extra);
 static GtkMenu* CreatePlanetarySystemMenu(string parentName, const PlanetarySystem* psys);
 static GtkMenu* CreateAlternateSurfaceMenu(const vector<string>& surfaces);
 
@@ -228,7 +228,7 @@ static void handleContextSurface(gpointer data)
 
 
 /* HELPER: Append a menu item and return pointer. Used for context menu. */
-static GtkMenuItem* AppendMenu(GtkWidget* parent, GtkSignalFunc callback, const gchar* name, gpointer extra)
+static GtkMenuItem* AppendMenu(GtkWidget* parent, GCallback callback, const gchar* name, gpointer extra)
 {
     GtkWidget* menuitem;
     gpointer data;
@@ -368,7 +368,7 @@ static GtkMenu* CreatePlanetarySystemMenu(string parentName, const PlanetarySyst
             if (obj->size() == 1)
             {
                 it=obj->begin();
-                AppendMenu(menu, GTK_SIGNAL_FUNC(handleContextPlanet), it->second.c_str(), GINT_TO_POINTER(it->first));
+                AppendMenu(menu, G_CALLBACK(handleContextPlanet), it->second.c_str(), GINT_TO_POINTER(it->first));
             }
             else
             {
@@ -383,7 +383,7 @@ static GtkMenu* CreatePlanetarySystemMenu(string parentName, const PlanetarySyst
                     subMenu = gtk_menu_new();
 
                     for(it=obj->begin(); it != obj->end(); it++)
-                        AppendMenu(subMenu, GTK_SIGNAL_FUNC(handleContextPlanet), it->second.c_str(), GINT_TO_POINTER(it->first));
+                        AppendMenu(subMenu, G_CALLBACK(handleContextPlanet), it->second.c_str(), GINT_TO_POINTER(it->first));
 
                     gtk_menu_item_set_submenu(AppendMenu(menu, NULL, menuName->c_str(), 0), GTK_WIDGET(subMenu));
                 }
@@ -391,7 +391,7 @@ static GtkMenu* CreatePlanetarySystemMenu(string parentName, const PlanetarySyst
                 {
                     /* Just add items to the popup */
                     for(it=obj->begin(); it != obj->end(); it++)
-                        AppendMenu(menu, GTK_SIGNAL_FUNC(handleContextPlanet), it->second.c_str(), GINT_TO_POINTER(it->first));
+                        AppendMenu(menu, G_CALLBACK(handleContextPlanet), it->second.c_str(), GINT_TO_POINTER(it->first));
                 }
             }
         }
@@ -407,10 +407,10 @@ static GtkMenu* CreateAlternateSurfaceMenu(const vector<string>& surfaces)
 {
     GtkWidget* menu = gtk_menu_new();
 
-    AppendMenu(menu, GTK_SIGNAL_FUNC(handleContextSurface), "Normal", 0);
+    AppendMenu(menu, G_CALLBACK(handleContextSurface), "Normal", 0);
     for (guint i = 0; i < surfaces.size(); i++)
     {
-        AppendMenu(menu, GTK_SIGNAL_FUNC(handleContextSurface), surfaces[i].c_str(), GINT_TO_POINTER(i+1));
+        AppendMenu(menu, G_CALLBACK(handleContextSurface), surfaces[i].c_str(), GINT_TO_POINTER(i+1));
     }
 
     return GTK_MENU(menu);

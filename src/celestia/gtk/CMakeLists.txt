@@ -40,6 +40,14 @@ set(GTK_HEADERS
 pkg_check_modules(GTK2 gtk+-2.0 REQUIRED)
 pkg_check_modules(GTK2GLEXT gtkglext-1.0 REQUIRED)
 
+# Gtk2 -> Gtk3 compat
+add_definitions(
+  -DGTK_DISABLE_SINGLE_INCLUDES
+  -DGDK_DISABLE_DEPRECATED
+  -DGTK_DISABLE_DEPRECATED
+  -DGSEAL_ENABLE
+)
+
 add_executable(celestia-gtk ${GTK_SOURCES})
 cotire(celestia-gtk)
 target_include_directories(celestia-gtk PRIVATE ${GTK2_INCLUDE_DIRS} ${GTK2GLEXT_INCLUDE_DIRS})

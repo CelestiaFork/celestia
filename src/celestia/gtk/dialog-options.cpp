@@ -112,8 +112,8 @@ void dialogViewOptions(AppData* app)
     gtk_box_pack_start(GTK_BOX(miscBox), infoFrame, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), midBox, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), miscBox, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG (app->optionDialog)->vbox), hbox, TRUE,
-                       TRUE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (app->optionDialog));
+    gtk_container_add (GTK_CONTAINER (content_area), hbox);
 
     gtk_container_set_border_width(GTK_CONTAINER(hbox), CELSPACING);
 

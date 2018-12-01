@@ -80,7 +80,9 @@ static gint glarea_configure(GtkWidget* widget, GdkEventConfigure*, AppData* app
     if (!gdk_gl_drawable_gl_begin (gldrawable, glcontext))
         return FALSE;
 
-    app->core->resize(widget->allocation.width, widget->allocation.height);
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(GTK_WIDGET(widget), &allocation);
+    app->core->resize(allocation.width, allocation.height);
 
     /* GConf changes only saved upon exit, since caused a lot of CPU activity
      * while saving intermediate steps. */

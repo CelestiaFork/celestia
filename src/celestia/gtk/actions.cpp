@@ -92,7 +92,8 @@ void actionOpenURL(GtkAction*, AppData* app)
     gtk_entry_set_text(GTK_ENTRY(entry), "cel://");
     gtk_editable_select_region(GTK_EDITABLE(entry), 0, -1);
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), entry, TRUE, TRUE, CELSPACING);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+    gtk_container_add (GTK_CONTAINER (content_area), entry);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
     gtk_widget_show_all(dialog);
 
@@ -227,12 +228,12 @@ void actionCaptureMovie(GtkAction*, AppData* app)
     GtkWidget* rlabel = gtk_label_new("Aspect Ratio:");
     gtk_box_pack_start(GTK_BOX(hbox), rlabel, TRUE, TRUE, 0);
 
-    GtkWidget* aspectmenubox = gtk_combo_box_new_text();
-    gtk_combo_box_append_text(GTK_COMBO_BOX(aspectmenubox), "1:1");
-    gtk_combo_box_append_text(GTK_COMBO_BOX(aspectmenubox), "4:3");
-    gtk_combo_box_append_text(GTK_COMBO_BOX(aspectmenubox), "16:9");
-    gtk_combo_box_append_text(GTK_COMBO_BOX(aspectmenubox), "Display");
-    gtk_combo_box_set_active(GTK_COMBO_BOX(aspectmenubox), 0);
+    GtkWidget* aspectmenubox = gtk_combo_box_new();
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(aspectmenubox), "1:1");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(aspectmenubox), "4:3");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(aspectmenubox), "16:9");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(aspectmenubox), "Display");
+//    gtk_combo_box_set_active_text(GTK_COMBO_BOX_TEXT(aspectmenubox), 0);
     gtk_box_pack_start(GTK_BOX(hbox), aspectmenubox, FALSE, FALSE, 0);
 
     GtkWidget* flabel = gtk_label_new("Frame Rate:");
@@ -256,14 +257,14 @@ void actionCaptureMovie(GtkAction*, AppData* app)
     if (gtk_dialog_run(GTK_DIALOG(fs)) == GTK_RESPONSE_ACCEPT)
     {
         char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(fs));
-        int aspect = gtk_combo_box_get_active(GTK_COMBO_BOX(aspectmenubox));
+        gchar* aspect = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(aspectmenubox));
         double fps = gtk_spin_button_get_value(GTK_SPIN_BUTTON(fpsspin));
         double quality = gtk_spin_button_get_value(GTK_SPIN_BUTTON(qspin));
 
         gtk_widget_destroy(fs);
         for (int i=0; i < 10 && gtk_events_pending ();i++)
             gtk_main_iteration ();
-        captureMovie(filename, aspect, fps, quality,  app);
+//        captureMovie(filename, aspect, fps, quality,  app);
         g_free(filename);
     }
     else
@@ -317,7 +318,8 @@ void actionSearchObject(GtkAction*, AppData* app)
 
     GtkWidget* box = gtk_hbox_new(FALSE, CELSPACING);
     gtk_container_set_border_width(GTK_CONTAINER(box), CELSPACING);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), box, TRUE, TRUE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+    gtk_container_add (GTK_CONTAINER (content_area), box);
 
     GtkWidget* label = gtk_label_new("Object name");
     gtk_box_pack_start(GTK_BOX(box), label, TRUE, TRUE, 0);
@@ -451,8 +453,10 @@ void actionViewerSize(GtkAction*, AppData* app)
     char res[32];
 
     screenX = gdk_screen_get_width(gdk_screen_get_default());
-    currentX = app->glArea->allocation.width;
-    currentY = app->glArea->allocation.height;
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(GTK_WIDGET(app->glArea), &allocation);
+    currentX = allocation.width;
+    currentY = allocation.height;
 
     dialog = gtk_dialog_new_with_buttons("Set Viewer Size...",
                                          GTK_WINDOW(app->mainWindow),
@@ -461,16 +465,12 @@ void actionViewerSize(GtkAction*, AppData* app)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    GtkWidget* vbox = gtk_vbox_new(FALSE, CELSPACING);
-    gtk_container_set_border_width(GTK_CONTAINER(vbox), CELSPACING);
-
     GtkWidget* label = gtk_label_new("Dimensions for Main Window:");
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+    gtk_container_add (GTK_CONTAINER (content_area), label);
 
-    GtkWidget* menubox = gtk_combo_box_new_text();
-    gtk_box_pack_start(GTK_BOX(vbox), menubox, FALSE, FALSE, 0);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), vbox, TRUE, TRUE, 0);
+    GtkWidget* menubox = gtk_combo_box_new();
+    gtk_container_add (GTK_CONTAINER (content_area), menubox);
 
     while (resolutions[i] != -1)
     {
@@ -487,29 +487,29 @@ void actionViewerSize(GtkAction*, AppData* app)
         else
             break;
 
-        gtk_combo_box_append_text(GTK_COMBO_BOX(menubox), res);
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(menubox), res);
     }
 
-    gtk_combo_box_set_active(GTK_COMBO_BOX(menubox), position);
+//    gtk_combo_box_text_set_active_text(GTK_COMBO_BOX_TEXT(menubox), position);
 
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_widget_show_all(dialog);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK)
     {
-        int active = gtk_combo_box_get_active(GTK_COMBO_BOX(menubox));
+        gchar* active = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(menubox));
 
-        if (active > -1 && active != position)
+        if (/*active > -1 && active != position*/active)
         {
             /* Adjust for default entry */
-            if (active > position) active--;
+//            if (active > position) active--;
 
-            newX = resolutions[active + 1];
+//            newX = resolutions[active + 1];
             gtk_window_get_size(GTK_WINDOW(app->mainWindow), &winX, &winY);
 
             /* Resizing takes into account border, titlebar, and menubar
                sizes. Without them only an allocation can be requested */
-            gtk_window_resize(GTK_WINDOW(app->mainWindow), newX + winX - currentX, int(0.75 * newX) + winY - currentY);
+//            gtk_window_resize(GTK_WINDOW(app->mainWindow), newX + winX - currentX, int(0.75 * newX) + winY - currentY);
         }
     }
 
@@ -525,8 +525,10 @@ void actionFullScreen(GtkAction* action, AppData* app)
     if (app->fullScreen)
     {
         /* Save size/position, so original numbers are available for prefs */
-        g_object_set_data(G_OBJECT(app->mainWindow), "sizeX", GINT_TO_POINTER(app->glArea->allocation.width));
-        g_object_set_data(G_OBJECT(app->mainWindow), "sizeY", GINT_TO_POINTER(app->glArea->allocation.height));
+        GtkAllocation allocation;
+        gtk_widget_get_allocation(GTK_WIDGET(app->glArea), &allocation);
+        g_object_set_data(G_OBJECT(app->mainWindow), "sizeX", GINT_TO_POINTER(allocation.width));
+        g_object_set_data(G_OBJECT(app->mainWindow), "sizeY", GINT_TO_POINTER(allocation.height));
         gtk_window_get_position(GTK_WINDOW(app->mainWindow), &positionX, &positionY);
         g_object_set_data(G_OBJECT(app->mainWindow), "positionX", GINT_TO_POINTER(positionX));
         g_object_set_data(G_OBJECT(app->mainWindow), "positionY", GINT_TO_POINTER(positionY));
@@ -1231,7 +1233,8 @@ static void textInfoDialog(const char *txt, const char *title, AppData* app)
                                                     NULL);
 
     GtkWidget* scrolled_window = gtk_scrolled_window_new (NULL, NULL);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), scrolled_window, TRUE, TRUE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+    gtk_container_add (GTK_CONTAINER (content_area), scrolled_window);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (scrolled_window),
                                    GTK_POLICY_AUTOMATIC,
                                    GTK_POLICY_AUTOMATIC);

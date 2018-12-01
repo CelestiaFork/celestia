@@ -27,7 +27,7 @@ static gboolean monthChosen(GtkComboBox *menu, int* month);
 
 /* Declarations: Helpers */
 static void chooseOption(GtkWidget *hbox, const char *str, char *choices[],
-                         int *val, GtkSignalFunc chosen);
+                         int *val, GCallback chosen);
 static void intSpin(GtkWidget *hbox, const char *str, int min, int max,
                     int *val, const char *sep);
 
@@ -63,7 +63,8 @@ void dialogSetTime(AppData* app)
     gtk_container_add(GTK_CONTAINER(align),GTK_WIDGET(hbox));
     gtk_container_add(GTK_CONTAINER(frame),GTK_WIDGET(align));
     gtk_container_set_border_width (GTK_CONTAINER (frame), 7);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(stimedialog)->vbox), frame, FALSE, FALSE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (stimedialog));
+    gtk_container_add (GTK_CONTAINER (content_area), frame);
 
     int seconds = (int)date.seconds;
     intSpin(hbox, "Hour", 0, 23, &date.hour, ":");
@@ -74,7 +75,7 @@ void dialogSetTime(AppData* app)
                  "Timezone",
                  (char **)timeOptions,
                  &timezone,
-                 GTK_SIGNAL_FUNC(zoneChosen));
+                 G_CALLBACK(zoneChosen));
 
     gtk_widget_show_all(hbox);
     hbox = gtk_hbox_new(FALSE, 6);
@@ -86,13 +87,13 @@ void dialogSetTime(AppData* app)
                  "Month",
                  (char **)monthOptions,
                  &date.month,
-                 GTK_SIGNAL_FUNC(monthChosen));
+                 G_CALLBACK(monthChosen));
 
     /* (Hopefully, noone will need to go beyond these years :-) */
     intSpin(hbox, "Day", 1, 31, &date.day, ",");
     intSpin(hbox, "Year", -9999, 9999, &date.year, " ");
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(stimedialog)->vbox), frame, FALSE, FALSE, 0);
+    gtk_container_add (GTK_CONTAINER (content_area), frame);
     gtk_container_add(GTK_CONTAINER(align),GTK_WIDGET(hbox));
     gtk_container_add(GTK_CONTAINER(frame),GTK_WIDGET(align));
     gtk_widget_show(align);
@@ -121,7 +122,7 @@ static gboolean intAdjChanged(GtkAdjustment* adj, int *val)
 {
     if (val)
     {
-        *val = (int)adj->value;
+        *val = (int)gtk_adjustment_get_value(adj);
         return TRUE;
     }
     return FALSE;
@@ -146,16 +147,16 @@ static gboolean monthChosen(GtkComboBox *menu, int* month)
 
 
 /* HELPER: creates one of the several drop-down boxes */
-static void chooseOption(GtkWidget *hbox, const char *str, char *choices[], int *val, GtkSignalFunc chosen)
+static void chooseOption(GtkWidget *hbox, const char *str, char *choices[], int *val, GCallback chosen)
 {
     GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
     GtkWidget *label = gtk_label_new(str);
     gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
-    GtkWidget* combo = gtk_combo_box_new_text();
+    GtkWidget* combo = gtk_combo_box_text_new();
 
     for(unsigned int i = 0; choices[i]; i++)
     {
-        gtk_combo_box_append_text(GTK_COMBO_BOX(combo), choices[i]);
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo), choices[i]);
     }
 
     gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, TRUE, 0);

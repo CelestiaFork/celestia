@@ -53,14 +53,15 @@ void dialogTourGuide(AppData* app)
     GtkWidget* gotoButton = gtk_button_new_with_label("Go To");
     gtk_box_pack_start(GTK_BOX(hbox), gotoButton, TRUE, TRUE, 0);
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, FALSE, TRUE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+    gtk_container_add (GTK_CONTAINER (content_area), hbox);
 
     gtk_widget_show(hbox);
 
     td->descLabel = gtk_label_new("");
     gtk_label_set_line_wrap(GTK_LABEL(td->descLabel), TRUE);
     gtk_label_set_justify(GTK_LABEL(td->descLabel), GTK_JUSTIFY_FILL);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), td->descLabel, TRUE, TRUE, 0);
+    gtk_container_add (GTK_CONTAINER (content_area), td->descLabel);
 
     GtkWidget* menu = gtk_menu_new();
     const DestinationList* destinations = app->core->getDestinations();
@@ -73,7 +74,7 @@ void dialogTourGuide(AppData* app)
             if (dest != NULL)
             {
                 GtkWidget* item = gtk_menu_item_new_with_label(dest->name.c_str());
-                gtk_menu_append(GTK_MENU(menu), item);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
                 gtk_widget_show(item);
             }
         }
@@ -94,7 +95,7 @@ void dialogTourGuide(AppData* app)
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(menubox), menu);
 
-    gtk_widget_set_usize(dialog, 440, 300);
+    gtk_widget_set_size_request(dialog, 440, 300);
 
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_widget_show_all(dialog);
@@ -112,7 +113,7 @@ static gint TourGuideSelect(GtkWidget* w, TourData* td)
     if (item == NULL)
         return FALSE;
 
-    GList* list = gtk_container_children(GTK_CONTAINER(menu));
+    GList* list = gtk_container_get_children(GTK_CONTAINER(menu));
     int itemIndex = g_list_index(list, item);
 
     const DestinationList* destinations = td->app->core->getDestinations();

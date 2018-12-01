@@ -80,7 +80,8 @@ void dialogGotoObject(AppData* app)
 
     GtkWidget* vbox = gtk_vbox_new(TRUE, CELSPACING);
     gtk_container_set_border_width(GTK_CONTAINER(vbox), CELSPACING);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(data->dialog)->vbox), vbox, TRUE, TRUE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (data->dialog));
+    gtk_container_add (GTK_CONTAINER (content_area), vbox);
 
     GtkWidget* align = NULL;
     GtkWidget* hbox = NULL;
@@ -124,7 +125,7 @@ void dialogGotoObject(AppData* app)
     /* Distance Options */
     data->units = 0;
     hbox = gtk_hbox_new(FALSE, CELSPACING);
-    makeRadioItems(unitLabels, hbox, GTK_SIGNAL_FUNC(changeGotoUnits), NULL, data);
+    makeRadioItems(unitLabels, hbox, G_CALLBACK(changeGotoUnits), NULL, data);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, TRUE, 0);
 
     g_signal_connect(data->dialog, "response",

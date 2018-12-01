@@ -52,7 +52,8 @@ void dialogSolarBrowser(AppData* app)
     /* Solar System Browser */
     GtkWidget *mainbox = gtk_vbox_new(FALSE, CELSPACING);
     gtk_container_set_border_width(GTK_CONTAINER(mainbox), CELSPACING);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(browser)->vbox), mainbox, TRUE, TRUE, 0);
+    GtkWidget* content_area = gtk_dialog_get_content_area (GTK_DIALOG (browser));
+    gtk_container_add (GTK_CONTAINER (content_area), mainbox);
 
     GtkWidget *scrolled_win = gtk_scrolled_window_new (NULL, NULL);
 
@@ -86,15 +87,15 @@ void dialogSolarBrowser(AppData* app)
 
     /* Common Buttons */
     GtkWidget *hbox = gtk_hbox_new(TRUE, CELSPACING);
-    if (buttonMake(hbox, "Center", (GtkSignalFunc)actionCenterSelection, app))
+    if (buttonMake(hbox, "Center", (GCallback)actionCenterSelection, app))
         return;
-    if (buttonMake(hbox, "Go To", (GtkSignalFunc)actionGotoSelection, app))
+    if (buttonMake(hbox, "Go To", (GCallback)actionGotoSelection, app))
         return;
     gtk_box_pack_start(GTK_BOX(mainbox), hbox, FALSE, FALSE, 0);
 
     g_signal_connect(browser, "response", G_CALLBACK(gtk_widget_destroy), browser);
 
-    gtk_widget_set_usize(browser, 500, 400); /* Absolute Size, urghhh */
+    gtk_widget_set_size_request(browser, 500, 400); /* Absolute Size, urghhh */
     gtk_widget_show_all(browser);
 }
 

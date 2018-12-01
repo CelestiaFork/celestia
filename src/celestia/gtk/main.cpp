@@ -277,7 +277,7 @@ static void initRealize(GtkWidget* widget, AppData* app)
     app->core->setTimeZoneName("UTC");
 
     /* Set the cursor to a crosshair */
-    gdk_window_set_cursor(widget->window, gdk_cursor_new(GDK_CROSSHAIR));
+    gdk_window_set_cursor(gtk_widget_get_window(widget), gdk_cursor_new(GDK_CROSSHAIR));
 }
 
 
@@ -497,7 +497,7 @@ int main(int argc, char* argv[])
     gtk_window_set_default_icon_from_file("celestia-logo.png", NULL);
 
     /* Set focus to glArea widget */
-    GTK_WIDGET_SET_FLAGS(app->glArea, GTK_CAN_FOCUS);
+    gtk_widget_set_can_focus(GTK_WIDGET(app->glArea), true);
     gtk_widget_grab_focus(GTK_WIDGET(app->glArea));
 
     /* Initialize the Watcher */
