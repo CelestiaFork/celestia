@@ -62,6 +62,7 @@ LookAt(Eigen::Matrix<T, 3, 1> from, Eigen::Matrix<T, 3, 1> to, Eigen::Matrix<T, 
 
 /*! Return an orthographic matrix
  */
+/*
 Eigen::Matrix4d
 Ortho(double left, double right, double bottom, double top, double near, double far)
 {
@@ -76,5 +77,5 @@ Ortho(double left, double right, double bottom, double top, double near, double 
 
    return std::move(m);
 }
-
+*/
 #endif // _CELMATH_GEOMUTIL_H_
