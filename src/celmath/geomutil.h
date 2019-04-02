@@ -60,5 +60,21 @@ LookAt(Eigen::Matrix<T, 3, 1> from, Eigen::Matrix<T, 3, 1> to, Eigen::Matrix<T, 
     return Eigen::Quaternion<T>(m).conjugate();
 }
 
-#endif // _CELMATH_GEOMUTIL_H_
+/*! Return an orthographic matrix
+ */
+Eigen::Matrix4d
+Ortho(double left, double right, double bottom, double top, double near, double far)
+{
+    double rl = right - left;
+    double tb = top - bottom;
+    double fn = far - near;
+    Eigen::Matrix4d m;
+    m << 2/rl,    0,     0, - (right + left) / rl,
+            0, 2/tb,     0, - (top + bottom) / tb,
+            0,    0, -2/fn, - (far + near)   / fn,
+            0,    0,     0,                     1;
 
+   return std::move(m);
+}
+
+#endif // _CELMATH_GEOMUTIL_H_
